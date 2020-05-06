@@ -107,7 +107,7 @@ def turnright():
     if not robot.Configured: #make sure robot is
         return jsonify({ "message":"robot not yet configured"})
     robot.CurrentCommand = "turning right"
-    robot.rotate_power_degrees_IMU(20, 90)
+    duration = robot.rotate_power_degrees_IMU(20, 90)
     #save data to the databas
     return jsonify({ "message":"turning right", "duration":duration }) #jsonify take any type and makes a JSON
 
@@ -116,7 +116,7 @@ def turnleft():
     if not robot.Configured: #make sure robot is
         return jsonify({ "message":"robot not yet configured"})
     robot.CurrentCommand = "turning left"
-    robot.rotate_power_degrees_IMU(20, -90)
+    duration = robot.rotate_power_degrees_IMU(20, -90)
     #save data to the databas
     return jsonify({ "message":"turning left", "duration":duration }) #jsonify take any type and makes a JSON
 
@@ -146,13 +146,15 @@ def movetojunction():
         return jsonify({ "message":"robot not yet configured"})
     robot.CurrentCommand = "moving until junction"
     duration = None
-    duration = robot.move_power_untiljunction(RPOWER, LPOWER, 20, junctionColour)
+    duration = robot.move_power_untildistanceto(RPOWER, LPOWER, 20)
     jsonify({ "message":"moving until junction", "duration":duration }) #jsonify take any type and makes a JSON
-    return navigatejunction()
+    if robot.CurrentCommand != "stop":
+        navigatejunction()
+    return 
 
 def navigatejunction():
+    robot.CurrentCommand = "navigating junction"
     if robot.CurrentCommand != "stop":
-        robot.CurrentCommand = "navigating junction"
         distancemeasured = robot.get_ultra_sensor()
         if distancemeasured >= 20 and distancemeasured != 0.0:
             navigateintersection()
@@ -173,45 +175,47 @@ def navigatejunction():
 def navigateintersection():
     robot.CurrentCommand = "navigating intersection"
     robot.rotate_power_degrees_IMU(20, -90)
-    distancemeasured = robot.get_ultra_sensor() #reading ultrasonic to see if there is a wall infront
-    if distancemeasured >= 20 and distancemeasured != 0.0:
-        movetojunction()
-        #turned left
-    else:
-        robot.rotate_power_degrees_IMU(20, 90)
-        distancemeasured = robot.get_ultra_sensor()
+    if robot.CurrentCommand != "stop":
+        distancemeasured = robot.get_ultra_sensor() #reading ultrasonic to see if there is a wall infront
         if distancemeasured >= 20 and distancemeasured != 0.0:
             movetojunction()
-            #went straight
+            #turned left
         else:
             robot.rotate_power_degrees_IMU(20, 90)
             distancemeasured = robot.get_ultra_sensor()
             if distancemeasured >= 20 and distancemeasured != 0.0:
                 movetojunction()
-                #turned right
+                #went straight
             else:
                 robot.rotate_power_degrees_IMU(20, 90)
-                movetojunction()
-                #reversed
+                distancemeasured = robot.get_ultra_sensor()
+                if distancemeasured >= 20 and distancemeasured != 0.0:
+                    movetojunction()
+                    #turned right
+                else:
+                    robot.rotate_power_degrees_IMU(20, 90)
+                    movetojunction()
+                    #reversed
     return jsonify({ "message":"navigating intersection"})
 
 def navigatewall():
     robot.CurrentCommand = "navigating wall"
     robot.rotate_power_degrees_IMU(20, -90)
-    distancemeasured = robot.get_ultra_sensor() #reading ultrasonic to see if there is a wall infront
-    if distancemeasured < 20 and distancemeasured != 0:
-        robot.rotate_power_degrees_IMU(20, 180)
-        distancemeasured = robot.get_ultra_sensor()
+    if robot.CurrentCommand != "stop":
+        distancemeasured = robot.get_ultra_sensor() #reading ultrasonic to see if there is a wall infront
         if distancemeasured < 20 and distancemeasured != 0:
-            robot.rotate_power_degrees_IMU(20, 90)
-            movetojunction()
-            #reversed
+            robot.rotate_power_degrees_IMU(20, 180)
+            distancemeasured = robot.get_ultra_sensor()
+            if distancemeasured < 20 and distancemeasured != 0:
+                robot.rotate_power_degrees_IMU(20, 90)
+                movetojunction()
+                #reversed
+            else:
+                movetojunction()
+                #went right
         else:
             movetojunction()
-            #went right
-    else:
-        movetojunction()
-        #turned left
+            #turned left
     return jsonify({ "message":"navigating path obstruction"})
 
 #creates a route to get all the event data
