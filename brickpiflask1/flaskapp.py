@@ -84,7 +84,7 @@ def map():
 
 #start robot moving
 @app.route('/forward', methods=['GET','POST'])
-def start():
+def forward():
     if not robot.Configured: #make sure robot is
         return jsonify({ "message":"robot not yet configured"})
     robot.CurrentCommand = "moving forward"
