@@ -12,12 +12,15 @@
         <h3 id="message"></h3>
     </div>
     <div class="container">
+        <canvas id="mycanvas" style="border:1px solid black"; height=480px width=640px></canvas>
+    </div>
+    <div class="container">
         <div class="row text-center">
           <div class="col-4">
             <button type="button" class="btn btn-dark" onclick="JSONrequest('/turnleft','POST')">Turn Left</button>
           </div>
           <div class="col-4">
-            <button type="button" class="btn btn-success" onclick="JSONrequest('/start','POST')">Start</button>
+            <button type="button" class="btn btn-success" onclick="JSONrequest('/start','POST',draw_path)">Start</button>
           </div>
           <div class="col-4">
             <button type="button" class="btn btn-dark" onclick="JSONrequest('/turnright','POST')">Turn Right</button>
@@ -66,3 +69,8 @@
       </div>
 </div>
 {% endblock %}
+
+{% block scripts %}
+    <script src="/static/scripts/pen.js"></script>
+    <script src="/static/scripts/hsv.js"></script>
+    <script src="/static/scripts/missioncontrol.js"></script>
