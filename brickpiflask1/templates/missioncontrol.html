@@ -1,7 +1,4 @@
 {% extends "layout.html" %}
-{% block scripts %}
-  <script src="/static/scripts/missioncontrol.js"></script>
-{% endblock %}
 {% block content %}
 <h2>Sample Web Interface using Bootstrap</h2><br/>
 <p>The buttons when clicked run a special script that can be used to send data to the server without a form (and the necessary page refresh). This helper script uses JSON (a method of sending complex data through text encoding).</p>
@@ -20,7 +17,7 @@
             <button type="button" class="btn btn-dark" onclick="JSONrequest('/turnleft','POST')">Turn Left</button>
           </div>
           <div class="col-4">
-            <button type="button" class="btn btn-success" onclick="JSONrequest('/start','POST',draw_path)">Start</button>
+            <button type="button" class="btn btn-success" onclick="JSONrequest('/forward','POST','draw_path')">Forward</button>
           </div>
           <div class="col-4">
             <button type="button" class="btn btn-dark" onclick="JSONrequest('/turnright','POST')">Turn Right</button>
@@ -60,7 +57,7 @@
             <button type="button" class="btn btn-success" onclick="JSONrequest('/closeclaw','POST')">Close Claw</button>
           </div>
           <div class="col-4">
-            <button type="button" class="btn btn-success" onclick="JSONrequest('/tojunction', 'POST')">Move To Junction</button>
+            <button type="button" class="btn btn-success" onclick="JSONrequest('/tojunction', 'POST')">Automated Movement</button>
           </div>
           <div class="col-4">
             <button type="button" class="btn btn-success" onclick="JSONrequest('/openclaw','POST')">Open Claw</button>
@@ -74,3 +71,4 @@
     <script src="/static/scripts/pen.js"></script>
     <script src="/static/scripts/hsv.js"></script>
     <script src="/static/scripts/missioncontrol.js"></script>
+{% endblock %}

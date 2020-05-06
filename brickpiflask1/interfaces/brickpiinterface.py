@@ -422,7 +422,9 @@ class BrickPiInterface():
             symbol = '<='; limit = degrees-marginoferror; power = -power
         totaldegreesrotated = 0; lastrun = 0
         
-        elapsedtime = 0; starttime = time.time(); timelimit = starttime + self.timelimit
+        elapsedtime = 0
+        starttime = time.time()
+        timelimit = starttime + self.timelimit
          
         self.log("target degrees: " + str(degrees))
         self.log(str(totaldegreesrotated) + str(symbol) + str(limit))

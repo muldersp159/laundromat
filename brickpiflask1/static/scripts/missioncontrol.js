@@ -24,16 +24,4 @@ funciton draw_path(result)
     turtle.go(result.elapsedtime*20).stroke();
 }
 
-//THis recurring function gets data using JSON
-function get_current_command() {
-    if (shutdown == false)
-    {
-        JSONrequest('/getcurrentcommand','POST', writecurrentcommand); //Once data is received it is passed to the writecurrentcommand
-    }
-}
-
-//with received json data, send to page
-function writecurrentcommand(results) {
-    document.getElementById('message').innerHTML = results.currentcommand;
-}
 

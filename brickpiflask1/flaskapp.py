@@ -83,14 +83,15 @@ def map():
     return render_template('map.html', results=results, configured = robot.Configured)
 
 #start robot moving
-@app.route('/start', methods=['GET','POST'])
+@app.route('/forward', methods=['GET','POST'])
 def start():
     if not robot.Configured: #make sure robot is
         return jsonify({ "message":"robot not yet configured"})
-    robot.CurrentCommand = "starting"
+    robot.CurrentCommand = "moving forward"
+    heading = robot.get_orientation_IMU()
     duration = None
     duration = robot.move_power_untildistanceto(RPOWER, LPOWER, 20)
-    return jsonify({ "message":"starting", "duration":duration }) #jsonify take any type and makes a JSON
+    return jsonify({ "message":"moving forward", "duration":duration, "heading":heading[0]}) #jsonify take any type and makes a JSON
     
 #start robot moving backwards
 @app.route('/reverse', methods=['GET','POST'])
@@ -98,7 +99,7 @@ def reverse():
     if not robot.Configured: #make sure robot is
         return jsonify({ "message":"robot not yet configured"})
     robot.CurrentCommand = "reversing"
-    robot.rotate_power_degrees_IMU(20, 180)
+    duration = robot.rotate_power_degrees_IMU(20, 180)
     #save data to the databas
     return jsonify({ "message":"reversing", "duration":duration }) #jsonify take any type and makes a JSON
 
