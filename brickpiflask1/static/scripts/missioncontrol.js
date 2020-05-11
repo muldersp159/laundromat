@@ -3,7 +3,7 @@ var recurringhandle = null;  //can be used to delete recurring function if you w
 
 //create a new pen object attached to our canvas tag
 var turtle = new Pen("mycanvas");
-turtle.canvas.translate(.5, .5);
+turtle.canvas.translate(0.5, 0.5);
 turtle.pensize(3);
 turtle.penstyle("#000");
 turtle.pendown();
@@ -18,6 +18,7 @@ function shutdownserver(){
 }
 
 function draw_path(result){
+    print(result);
     console.log(result);
     turtle.angle(result.heading);
     turtle.go(result.duration*20).stroke();
