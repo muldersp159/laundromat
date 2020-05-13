@@ -365,10 +365,11 @@ class BrickPiInterface():
     def move_power_untildistanceto(self, Rpower, Lpower, distanceto):
         if self.config['ultra'] >= DISABLED:
             return 0
-        self.CurrentCommand = "move_power_untildistanceto"
         bp = self.BP
         distancedetected = 300 # to set an initial distance detected before loop
-        elapsedtime = 0; starttime = time.time(); timelimit = starttime + self.timelimit  #all timelimits are a backup plan
+        elapsedtime = 0
+        starttime = time.time()
+        timelimit = starttime + self.timelimit  #all timelimits are a backup plan
         collisiontype = None
         #Turn motors on
         bp.set_motor_power(bp.PORT_A, Rpower)
@@ -392,7 +393,7 @@ class BrickPiInterface():
                 break
         elapsedtime = time.time() - starttime
         bp.set_motor_power(self.largemotors, 0)
-        return {"collisiontype":collisiontype,"elapsedtime":elapsedtime}  
+        return (elapsedtime)
 
     #Rotate power and time, -power to reverse
     def rotate_power_time(self, power, t):

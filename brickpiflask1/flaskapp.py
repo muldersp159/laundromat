@@ -90,7 +90,7 @@ def forward():
     robot.CurrentCommand = "moving forward"
     heading = robot.get_orientation_IMU()
     duration = None
-    duration = robot.move_power_untildistanceto(RPOWER, LPOWER, 20)
+    duration = robot.move_power_untildistanceto(RPOWER, LPOWER, 25)
     return jsonify({ "message":"moving forward", "duration":duration, "heading":heading[0]}) #jsonify take any type and makes a JSON
     
 #start robot moving backwards

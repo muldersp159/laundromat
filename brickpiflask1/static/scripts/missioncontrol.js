@@ -18,7 +18,6 @@ function shutdownserver(){
 }
 
 function draw_path(result){
-    print(result);
     console.log(result);
     turtle.angle(result.heading);
     turtle.go(result.duration*20).stroke();
