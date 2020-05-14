@@ -72,6 +72,16 @@ def getallstats():
     results = robot.get_all_sensors()
     return jsonify(results)
 
+@app.route('/getmovement', methods=['GET','POST'])
+def getmovement():
+    if not robot.Configured:
+        return redirect('./')
+    if 'userid' not in session:
+        return redirect('./')
+    heading = robot.get_orientation_IMU()
+    command = robot.CurrentCommand
+    return {'heading':heading, 'command':command}
+
 #map or table of fire and path data
 @app.route('/map')
 def map():
@@ -91,6 +101,7 @@ def forward():
     heading = robot.get_orientation_IMU()
     duration = None
     duration = robot.move_power_untildistanceto(RPOWER, LPOWER, 25)
+    robot.CurrentCommand = "stop"
     return jsonify({ "message":"moving forward", "duration":duration, "heading":heading[0]}) #jsonify take any type and makes a JSON
     
 #start robot moving backwards
@@ -100,6 +111,7 @@ def reverse():
         return jsonify({ "message":"robot not yet configured"})
     robot.CurrentCommand = "reversing"
     duration = robot.rotate_power_degrees_IMU(20, 180)
+    robot.CurrentCommand = "stop"
     #save data to the databas
     return jsonify({ "message":"reversing", "duration":duration }) #jsonify take any type and makes a JSON
 
@@ -109,6 +121,7 @@ def turnright():
         return jsonify({ "message":"robot not yet configured"})
     robot.CurrentCommand = "turning right"
     duration = robot.rotate_power_degrees_IMU(20, 90)
+    robot.CurrentCommand = "stop"
     #save data to the databas
     return jsonify({ "message":"turning right", "duration":duration }) #jsonify take any type and makes a JSON
 
@@ -118,6 +131,7 @@ def turnleft():
         return jsonify({ "message":"robot not yet configured"})
     robot.CurrentCommand = "turning left"
     duration = robot.rotate_power_degrees_IMU(20, -90)
+    robot.CurrentCommand = 'stop'
     #save data to the databas
     return jsonify({ "message":"turning left", "duration":duration }) #jsonify take any type and makes a JSON
 
@@ -126,8 +140,10 @@ def closeclaw():
     if not robot.Configured: #make sure robot is
         return jsonify({ "message":"robot not yet configured"})
     robot.CurrentCommand = "closing claw"
+    duration = None
     while robot.CurrentCommand != "stop":
         duration = robot.close_claw()
+        obot.CurrentCommand = 'stop'
     #save data to the databas
     return jsonify({ "message":"closing claw", "duration":duration }) #jsonify take any type and makes a JSON
 
@@ -136,8 +152,10 @@ def openclaw():
     if not robot.Configured: #make sure robot is
         return jsonify({ "message":"robot not yet configured"})
     robot.CurrentCommand = "opening claw"
+    duration = None
     while robot.CurrentCommand != "stop":
         duration = robot.open_claw()
+        robot.CurrentCommand = 'stop'
     #save data to the databas
     return jsonify({ "message":"opening claw", "duration":duration }) #jsonify take any type and makes a JSON
 
@@ -145,16 +163,17 @@ def openclaw():
 def movetojunction():
     if not robot.Configured: #make sure robot is configured
         return jsonify({ "message":"robot not yet configured"})
-    robot.CurrentCommand = "moving until junction"
+    robot.CurrentCommand = "moving forward"
     duration = None
     duration = robot.move_power_untildistanceto(RPOWER, LPOWER, 20)
+    robot.CurrentCommand = 'stop'
     jsonify({ "message":"moving until junction", "duration":duration }) #jsonify take any type and makes a JSON
     if robot.CurrentCommand != "stop":
-        navigatejunction()
+        identifyjunction()
     return 
 
-def navigatejunction():
-    robot.CurrentCommand = "navigating junction"
+def identifyjunction():
+    robot.CurrentCommand = "identifying junction"
     if robot.CurrentCommand != "stop":
         distancemeasured = robot.get_ultra_sensor()
         if distancemeasured >= 20 and distancemeasured != 0.0:
@@ -162,8 +181,7 @@ def navigatejunction():
         else:   
             tempmeasured = robot.get_thermal_sensor()
             if tempmeasured > 40:
-                reverse()
-                movetojunction()
+                navigatewall()
                 #a fire was detected, so the robot reversed
                 return jsonify({ "message":"fire detected"})
             elif tempmeasured < 10:
@@ -178,19 +196,19 @@ def navigateintersection():
     robot.rotate_power_degrees_IMU(20, -90)
     if robot.CurrentCommand != "stop":
         distancemeasured = robot.get_ultra_sensor() #reading ultrasonic to see if there is a wall infront
-        if distancemeasured >= 20 and distancemeasured != 0.0:
+        if distancemeasured >= 40 and distancemeasured != 0.0:
             movetojunction()
             #turned left
         else:
             robot.rotate_power_degrees_IMU(20, 90)
             distancemeasured = robot.get_ultra_sensor()
-            if distancemeasured >= 20 and distancemeasured != 0.0:
+            if distancemeasured >= 40 and distancemeasured != 0.0:
                 movetojunction()
                 #went straight
             else:
                 robot.rotate_power_degrees_IMU(20, 90)
                 distancemeasured = robot.get_ultra_sensor()
-                if distancemeasured >= 20 and distancemeasured != 0.0:
+                if distancemeasured >= 40 and distancemeasured != 0.0:
                     movetojunction()
                     #turned right
                 else:
@@ -204,10 +222,10 @@ def navigatewall():
     robot.rotate_power_degrees_IMU(20, -90)
     if robot.CurrentCommand != "stop":
         distancemeasured = robot.get_ultra_sensor() #reading ultrasonic to see if there is a wall infront
-        if distancemeasured < 20 and distancemeasured != 0:
+        if distancemeasured < 40 and distancemeasured != 0:
             robot.rotate_power_degrees_IMU(20, 180)
             distancemeasured = robot.get_ultra_sensor()
-            if distancemeasured < 20 and distancemeasured != 0:
+            if distancemeasured < 40 and distancemeasured != 0:
                 robot.rotate_power_degrees_IMU(20, 90)
                 movetojunction()
                 #reversed

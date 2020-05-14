@@ -344,18 +344,18 @@ class BrickPiInterface():
     #simply turns motors on
     def move_power(self, power):
         bp = self.BP
-        self.CurrentCommand = "move_power"
+        #self.CurrentCommand = "move_power"
         self.BP.set_motor_power(self.largemotors, power)
         return
 
     #moves for the specified time (seconds) and power - use negative power to reverse
     def move_power_time(self, power, t):
         bp = self.BP
-        self.CurrentCommand = "move_power_time"
+        #self.CurrentCommand = "move_power_time"
         timelimit = time.time() + t
         while time.time() < timelimit and self.CurrentCommand != "stop":
             bp.set_motor_power(self.largemotors, power)
-        self.CurrentCommand = "stop"
+        #self.CurrentCommand = "stop"
         self.BP.set_motor_power(self.largemotors, 0)
         return
     
@@ -397,14 +397,14 @@ class BrickPiInterface():
 
     #Rotate power and time, -power to reverse
     def rotate_power_time(self, power, t):
-        self.CurrentCommand = "rotate_power_time"
+        #self.CurrentCommand = "rotate_power_time"
         bp = self.BP
         target = time.time() + t
         while time.time() < target and self.CurrentCommand != 'stop':
             bp.set_motor_power(self.rightmotor, -power)
             bp.set_motor_power(self.leftmotor, power)
         bp.set_motor_power(self.largemotors, 0) #stop
-        self.CurrentCommand = 'stop'
+        #self.CurrentCommand = 'stop'
         return
         
     #Rotates the robot with power and degrees using the IMU sensor. Negative degrees = left.
@@ -412,7 +412,7 @@ class BrickPiInterface():
     def rotate_power_degrees_IMU(self, power, degrees, marginoferror=3):
         if self.config['imu'] >= DISABLED:
             return
-        self.CurrentCommand = "rotate_power_degrees_IMU"
+        #self.CurrentCommand = "rotate_power_degrees_IMU"
         bp = self.BP
         symbol = '<'; limit = 0
         if degrees == 0:
@@ -445,7 +445,7 @@ class BrickPiInterface():
         if self.config['imu'] >= DISABLED:
             return
         bp = self.BP
-        self.CurrentCommand = "rotate_power_heading"
+        #self.CurrentCommand = "rotate_power_heading"
         if targetheading < 0:
             targetheading += 360
         elif targetheading > 360:
@@ -469,14 +469,14 @@ class BrickPiInterface():
             bp.set_motor_power(self.leftmotor, power)
             heading = self.get_compass_IMU()
             self.log("Current heading: " + str(heading))
-        self.CurrentCommand = "stop"
+        #self.CurrentCommand = "stop"
         bp.set_motor_power(self.largemotors, 0) #stop
         elapsedtime = time.time() - starttime
         return elapsedtime
 
     #moves the target class to the target degrees
     def __move_claw_targetdegrees(self, degrees):
-        self.CurrentCommand = "move_claw_targetdegrees"
+        #self.CurrentCommand = "move_claw_targetdegrees"
         degrees = -degrees #reversing 
         bp = self.BP
         if degrees == 0:
@@ -496,7 +496,7 @@ class BrickPiInterface():
             currentdegrees = bp.get_motor_encoder(self.mediummotor) #where is the current angle
             bp.set_motor_position(self.mediummotor, degrees)
             currentdegrees = bp.get_motor_encoder(self.mediummotor) #ACCURACY PROBLEM
-        self.CurrentCommand = "stop"
+        #self.CurrentCommand = "stop"
         bp.set_motor_power(self.mediummotor, 0)
         elapsedtime = time.time() - starttime
         return elapsedtime
@@ -515,20 +515,20 @@ class BrickPiInterface():
         
     #open the claw
     def open_claw(self, degrees=-1200):
-        self.CurrentCommand = 'open claw'
+        #self.CurrentCommand = 'open claw'
         if self.claw_closed == True:
             self.__move_claw_targetdegrees(degrees)
             self.claw_closed = False
-            self.CurrentCommand = 'stop'
+            #self.CurrentCommand = 'stop'
         return
 
     #close the claw
     def close_claw(self, degrees=1200):
-        self.CurrentCommand = 'close claw'
+        #self.CurrentCommand = 'close claw'
         if self.claw_closed == False:
             self.__move_claw_targetdegrees(degrees)
             self.claw_closed = True   
-            self.CurrentCommand = 'stop'
+            #self.CurrentCommand = 'stop'
         return
 
     #returns the current command
