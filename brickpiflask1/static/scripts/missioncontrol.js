@@ -1,6 +1,6 @@
 //var shutdown = false;
 var recurringhandle = null; //A handle to the recurring function
-recurringhandle = setInterval(get_moving, 200); //start pinging the server
+recurringhandle = setInterval(get_moving, 5000); //start pinging the server
 var bCalibration = false;
 
 //create a new pen object attached to our canvas tag
@@ -27,9 +27,11 @@ function draw_path(result){
 
 function draw_path_automated(result){
     console.log(result);
-    if result.command == "moving forward":
+    if (result.command == "moving forward")
+    {
         turtle.angle(result.heading);
         turtle.go(0.2*20).stroke();
+    }
 }
 
 //This recurring function gets data using JSON, note it cant be used while calibration

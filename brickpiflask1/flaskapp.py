@@ -74,13 +74,9 @@ def getallstats():
 
 @app.route('/getmovement', methods=['GET','POST'])
 def getmovement():
-    if not robot.Configured:
-        return redirect('./')
-    if 'userid' not in session:
-        return redirect('./')
-    heading = robot.get_orientation_IMU()
+    heading = robot.get_orientation_IMU()[0]
     command = robot.CurrentCommand
-    return {'heading':heading, 'command':command}
+    return jsonify({'heading':heading, 'command':command})
 
 #map or table of fire and path data
 @app.route('/map')
