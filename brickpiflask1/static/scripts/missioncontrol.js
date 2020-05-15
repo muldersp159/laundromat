@@ -9,7 +9,7 @@ turtle.canvas.translate(0.5, 0.5);
 turtle.pensize(3);
 turtle.penstyle("#000");
 turtle.pendown();
-turtle.jump(200,200);
+turtle.jump(240,320);
 
 
 function shutdownserver(){
