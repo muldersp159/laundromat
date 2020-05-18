@@ -1,6 +1,6 @@
 //var shutdown = false;
 var recurringhandle = null; //A handle to the recurring function
-recurringhandle = setInterval(get_moving, 5000); //start pinging the server
+recurringhandle = setInterval(get_moving, 1000); //start pinging the server
 var bCalibration = false;
 
 //create a new pen object attached to our canvas tag
