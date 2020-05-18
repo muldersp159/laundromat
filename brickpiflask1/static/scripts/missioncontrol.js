@@ -22,15 +22,23 @@ function shutdownserver(){
 function draw_path(result){
     console.log(result);
     turtle.angle(result.heading);
-    turtle.go(result.duration*20).stroke();
+    turtle.go(result.duration*10).stroke();
 }
 
 function draw_path_automated(result){
     console.log(result);
-    if (result.command == "moving forward")
+    if (result.command == "auto moving forward")
     {
         turtle.angle(result.heading);
-        turtle.go(0.2*20).stroke();
+        turtle.go(1.5*10).stroke();
+    }
+}
+
+function command_test(result) {
+    console.log(result)
+    if (result.currentcommand == "auto moving forward")
+    {
+        JSONrequest('/getmovement','POST', draw_path_automated);
     }
 }
 
@@ -38,6 +46,6 @@ function draw_path_automated(result){
 function get_moving() {
     if (bCalibration == false)
     {
-        JSONrequest('/getmovement','POST', draw_path_automated); //Once data is received it is passed to the drawchart function
+        JSONrequest('/getcurrentcommand','POST', command_test);
     }
 }

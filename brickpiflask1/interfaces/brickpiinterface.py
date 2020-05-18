@@ -374,8 +374,7 @@ class BrickPiInterface():
         #Turn motors on
         bp.set_motor_power(bp.PORT_A, Rpower)
         bp.set_motor_power(bp.PORT_B, Lpower)
-        while (self.CurrentCommand != "stop" and time.time() < timelimit):
-
+        while (self.CurrentCommand != "stop"):
             ##if sensor fails, or distanceto has been reached quit, or distancedetected = 0
             distancedetected = self.get_ultra_sensor()
             self.log("MOVING - Distance detected: " + str(distancedetected))

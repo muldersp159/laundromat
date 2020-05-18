@@ -7,7 +7,6 @@ from datetime import datetime
 
 #Create the database
 database = DatabaseHelper('test.sqlite')
-
 #Create Robot first. It take 4 seconds to initialise the robot, sensor view wont work until robot is created...
 robot = yourrobot.Robot()
 if robot.get_battery() < 6: #the robot motors will disable at 6 volts
@@ -27,6 +26,7 @@ junctionColour = "Red"
 #home page and login
 @app.route('/', methods=['GET','POST'])
 def index():
+    session['VictimFound'] = False
     if 'userid' in session:
         return redirect('./missioncontrol') #no form data is carried across using 'dot/'
     if request.method == "POST":  #if form data has been sent
@@ -71,12 +71,6 @@ def getallstats():
     robot.CurrentCommand = "getting all stats"
     results = robot.get_all_sensors()
     return jsonify(results)
-
-@app.route('/getmovement', methods=['GET','POST'])
-def getmovement():
-    heading = robot.get_orientation_IMU()[0]
-    command = robot.CurrentCommand
-    return jsonify({'heading':heading, 'command':command})
 
 #map or table of fire and path data
 @app.route('/map')
@@ -139,7 +133,7 @@ def closeclaw():
     duration = None
     while robot.CurrentCommand != "stop":
         duration = robot.close_claw()
-        obot.CurrentCommand = 'stop'
+        robot.CurrentCommand = 'stop'
     #save data to the databas
     return jsonify({ "message":"closing claw", "duration":duration }) #jsonify take any type and makes a JSON
 
@@ -159,10 +153,9 @@ def openclaw():
 def movetojunction():
     if not robot.Configured: #make sure robot is configured
         return jsonify({ "message":"robot not yet configured"})
-    robot.CurrentCommand = "moving forward"
+    robot.CurrentCommand = "auto moving forward"
     duration = None
     duration = robot.move_power_untildistanceto(RPOWER, LPOWER, 20)
-    robot.CurrentCommand = 'stop'
     jsonify({ "message":"moving until junction", "duration":duration }) #jsonify take any type and makes a JSON
     if robot.CurrentCommand != "stop":
         identifyjunction()
@@ -173,56 +166,127 @@ def identifyjunction():
     if robot.CurrentCommand != "stop":
         distancemeasured = robot.get_ultra_sensor()
         if distancemeasured >= 20 and distancemeasured != 0.0:
-            navigateintersection()
+            navigateintersection("intersection")
         else:   
             tempmeasured = robot.get_thermal_sensor()
             if tempmeasured > 40:
-                navigatewall()
-                #a fire was detected, so the robot reversed
-                return jsonify({ "message":"fire detected"})
+                jsonify({ "message":"fire detected"})
+                navigateintersection("fire")
+                #a fire was detected, so the robot treats it as a wall but logs it
             elif tempmeasured < 10:
                 #using an icepack or cold can of soft drint for victim
-                return jsonify({ "message":"victim found"})
+                jsonify({ "message":"victim found"})
+                session['VictimFound'] = True
+                collectvictim()
             else:
-                navigatewall()
-    return jsonify({ "message":"navigating junction"})
+                navigateintersection("wall")
+    return jsonify({ "message":"identifying junction"})
 
-def navigateintersection():
+def collectvictim():
+    robot.CurrentCommand = "moving towards victim"
+    duration = robot.move_power_untildistanceto(RPOWER, LPOWER, 5)
+    robot.CurrentCommand = "closing claw"
+    duration1 = robot.close_claw()
+    robot.CurrentCommand = "reversing"
+    duration2 = robot.rotate_power_degrees_IMU(20, -90)
+
+def navigateintersection(collisiontype):
     robot.CurrentCommand = "navigating intersection"
-    robot.rotate_power_degrees_IMU(20, -90)
-    if robot.CurrentCommand != "stop":
-        distancemeasured = robot.get_ultra_sensor() #reading ultrasonic to see if there is a wall infront
-        if distancemeasured >= 40 and distancemeasured != 0.0:
-            movetojunction()
-            #turned left
-        else:
-            robot.rotate_power_degrees_IMU(20, 90)
-            distancemeasured = robot.get_ultra_sensor()
+    if session['VictimFound'] == False:
+        robot.CurrentCommand = "Turning Left"
+        duration = robot.rotate_power_degrees_IMU(20, -90)
+        if robot.CurrentCommand != "stop":
+            distancemeasured = robot.get_ultra_sensor() #reading ultrasonic to see if there is a wall infront
             if distancemeasured >= 40 and distancemeasured != 0.0:
                 movetojunction()
-                #went straight
+                #turned left
             else:
-                robot.rotate_power_degrees_IMU(20, 90)
-                distancemeasured = robot.get_ultra_sensor()
-                if distancemeasured >= 40 and distancemeasured != 0.0:
-                    movetojunction()
-                    #turned right
-                else:
-                    robot.rotate_power_degrees_IMU(20, 90)
-                    movetojunction()
-                    #reversed
+                if collisiontype == "intersection":
+                    robot.CurrentCommand = "Turning Right"
+                    duration = robot.rotate_power_degrees_IMU(20, 90)
+                    distancemeasured = robot.get_ultra_sensor()
+                    if distancemeasured >= 40 and distancemeasured != 0.0:
+                        movetojunction()
+                        #went straight
+                    else:
+                        robot.CurrentCommand = "Turning Right"
+                        duration = robot.rotate_power_degrees_IMU(20, 90)
+                        distancemeasured = robot.get_ultra_sensor()
+                        if distancemeasured >= 40 and distancemeasured != 0.0:
+                            movetojunction()
+                            #turned right
+                        else:
+                            robot.CurrentCommand = "Turning Right"
+                            duration = robot.rotate_power_degrees_IMU(20, 90)
+                            movetojunction()
+                            #reversed
+                elif collisiontype == "wall" or collisiontype == "fire":
+                    robot.CurrentCommand = "Reversing"
+                    duration = robot.rotate_power_degrees_IMU(20, 180)
+                    distancemeasured = robot.get_ultra_sensor()
+                    if distancemeasured >= 40 and distancemeasured != 0.0:
+                        movetojunction()
+                        #turned right
+                    else:
+                        robot.CurrentCommand = "Turning Right"
+                        duration = robot.rotate_power_degrees_IMU(20, 90)
+                        movetojunction()
+                        #reversed
+    elif session['VictimFound'] == True:
+        robot.CurrentCommand = "Turning Right"
+        duration = robot.rotate_power_degrees_IMU(20, 90)
+        if robot.CurrentCommand != "stop":
+            distancemeasured = robot.get_ultra_sensor() #reading ultrasonic to see if there is a wall infront
+            if distancemeasured >= 40 and distancemeasured != 0.0:
+                movetojunction()
+                #turned left
+            else:
+                if collisiontype == "intersection":
+                    robot.CurrentCommand = "Turning Left"
+                    duration = robot.rotate_power_degrees_IMU(20, -90)
+                    distancemeasured = robot.get_ultra_sensor()
+                    if distancemeasured >= 40 and distancemeasured != 0.0:
+                        movetojunction()
+                        #went straight
+                    else:
+                        robot.CurrentCommand = "Turning Left"
+                        duration = robot.rotate_power_degrees_IMU(20, -90)
+                        distancemeasured = robot.get_ultra_sensor()
+                        if distancemeasured >= 40 and distancemeasured != 0.0:
+                            movetojunction()
+                            #turned right
+                        else:
+                            robot.CurrentCommand = "Turning Left"
+                            duration = robot.rotate_power_degrees_IMU(20, -90)
+                            movetojunction()
+                            #reversed
+                elif collisiontype == "wall" or collisiontype == "fire":
+                    robot.CurrentCommand = "Reversing"
+                    duration = robot.rotate_power_degrees_IMU(20, 180)
+                    distancemeasured = robot.get_ultra_sensor()
+                    if distancemeasured >= 40 and distancemeasured != 0.0:
+                        movetojunction()
+                        #turned right
+                    else:
+                        robot.CurrentCommand = "Turning Left"
+                        duration = robot.rotate_power_degrees_IMU(20, -90)
+                        movetojunction()
+                        #reversed
     return jsonify({ "message":"navigating intersection"})
 
-def navigatewall():
+'''def navigatewall():
     robot.CurrentCommand = "navigating wall"
-    robot.rotate_power_degrees_IMU(20, -90)
+    robot.CurrentCommand = "Turning Left"
+    duration = robot.rotate_power_degrees_IMU(20, -90)
     if robot.CurrentCommand != "stop":
         distancemeasured = robot.get_ultra_sensor() #reading ultrasonic to see if there is a wall infront
         if distancemeasured < 40 and distancemeasured != 0:
-            robot.rotate_power_degrees_IMU(20, 180)
+            robot.CurrentCommand = "Reversing"
+            duration = robot.rotate_power_degrees_IMU(20, 180)
             distancemeasured = robot.get_ultra_sensor()
             if distancemeasured < 40 and distancemeasured != 0:
-                robot.rotate_power_degrees_IMU(20, 90)
+                robot.CurrentCommand = "Turning Right"
+                duration = robot.rotate_power_degrees_IMU(20, 90)
                 movetojunction()
                 #reversed
             else:
@@ -231,7 +295,7 @@ def navigatewall():
         else:
             movetojunction()
             #turned left
-    return jsonify({ "message":"navigating path obstruction"})
+    return jsonify({ "message":"navigating path obstruction"})'''
 
 #creates a route to get all the event data
 @app.route('/getallusers', methods=['GET','POST'])
@@ -243,6 +307,17 @@ def getallusers():
 @app.route('/getcurrentcommand', methods=['GET','POST'])
 def getcurrentcommand():
     return jsonify({"currentcommand":robot.CurrentCommand})
+
+@app.route('/getheading', methods=['GET','POST'])
+def getheading():
+    heading = robot.get_orientation_IMU()[0]
+    return jsonify({'heading':heading})
+
+@app.route('/getmovement', methods=['GET','POST'])
+def getmovement():
+    heading = robot.get_orientation_IMU()[0]
+    command = robot.CurrentCommand
+    return jsonify({'heading':heading, 'command':command})
 
 #get the current routine from robot.py
 @app.route('/getcurrentroutine', methods=['GET','POST'])
@@ -277,6 +352,7 @@ def stop():
 #Shutdown the web server
 @app.route('/shutdown', methods=['GET','POST'])
 def shutdown():
+    session.clear()
     robot.safe_exit()
     func = request.environ.get('werkzeug.server.shutdown')
     func()
