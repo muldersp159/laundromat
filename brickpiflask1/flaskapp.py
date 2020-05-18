@@ -173,7 +173,7 @@ def identifyjunction():
                 jsonify({ "message":"fire detected"})
                 navigateintersection("fire")
                 #a fire was detected, so the robot treats it as a wall but logs it
-            elif tempmeasured < 10:
+            elif tempmeasured < 20:
                 #using an icepack or cold can of soft drint for victim
                 jsonify({ "message":"victim found"})
                 session['VictimFound'] = True
@@ -188,7 +188,7 @@ def collectvictim():
     robot.CurrentCommand = "closing claw"
     duration1 = robot.close_claw()
     robot.CurrentCommand = "reversing"
-    duration2 = robot.rotate_power_degrees_IMU(20, -90)
+    duration2 = robot.rotate_power_degrees_IMU(20, 180)
 
 def navigateintersection(collisiontype):
     robot.CurrentCommand = "navigating intersection"
