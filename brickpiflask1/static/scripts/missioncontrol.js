@@ -35,7 +35,6 @@ function draw_path_automated(result){
 }
 
 function command_test(result) {
-    console.log(result)
     if (result.currentcommand == "auto moving forward")
     {
         JSONrequest('/getmovement','POST', draw_path_automated);

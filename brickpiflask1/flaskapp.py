@@ -186,9 +186,12 @@ def collectvictim():
     robot.CurrentCommand = "moving towards victim"
     duration = robot.move_power_untildistanceto(RPOWER, LPOWER, 5)
     robot.CurrentCommand = "closing claw"
-    duration1 = robot.close_claw()
-    robot.CurrentCommand = "reversing"
-    duration2 = robot.rotate_power_degrees_IMU(20, 180)
+    duration = None
+    while robot.CurrentCommand != "stop":
+        duration = robot.close_claw()
+        robot.CurrentCommand = 'stop'
+    reverse()
+    movetojunction()
 
 def navigateintersection(collisiontype):
     robot.CurrentCommand = "navigating intersection"
@@ -352,7 +355,7 @@ def stop():
 #Shutdown the web server
 @app.route('/shutdown', methods=['GET','POST'])
 def shutdown():
-    session.clear()
+    session['FoundVictim'] = False
     robot.safe_exit()
     func = request.environ.get('werkzeug.server.shutdown')
     func()
