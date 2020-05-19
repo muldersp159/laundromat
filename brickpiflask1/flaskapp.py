@@ -45,24 +45,57 @@ def index():
         flash("No data submitted")
     return render_template('index.html')
 
+def startfire(state,suburb,street,number):
+    locationdetails = database.ViewQueryHelper("SELECT LocationID FROM LocationTbl WHERE Number=? AND Street=? AND Suburb=? AND State=?",(number,street,suburb,state))
+    row = locationdetails[0]
+    locationid = row['LocationID']
+    starttime = time.time()
+    database.ModifyQueryHelper('INSERT INTO FireTbl (LocationID, UserID, StartTime) VALUES (?,?,?)',(locationid,session['userid'],starttime))
+
 @app.route('/locationform')
 def locationform():
     state = request.form['state']
     suburb = request.form['suburb']
     street = request.form['street']
     number = request.form['number']
-    if state == "" or suburb == "" or street == "" or number == "":
-        pass
+    if state != "" and suburb != "" and street != "" and number != "":
+        locationid = database.ViewQueryHelper("SELECT LocationID FROM LocationTbl WHERE Number=? AND Street=? AND Suburb=? AND State=?",(number,street,suburb,state))
+        if len(locationid) != 0:
+            return
+        else:
+            database.ModifyQueryHelper('INSERT INTO LocationTbl (State, Suburb, Street, Number) VALUES (?,?,?,?)',(state,suburb,street,number))
+            startfire(state,suburb,street,number)
+            return
     else:
-        database.ModifyQueryHelper('INSERT INTO LocationTbl (State, Suburb, Street, Number) VALUES (?,?,?,?)',(state,suburb,street,number))
+        return
+
+@app.route('/pastlocation')
+def pastlocation():
+    location = request.form['pastlocation']
+    if location != "No Past Locations":
+        locationparts = location.split(" ")
+        number = locationparts[0]
+        street = locationparts[1]
+        suburb = locationparts[2]
+        state = locationparts[3]
+        startfire(state,suburb,street,number)
+        return
+    else:
+        return
 
 #home page
 @app.route('/missioncontrol')
 def missioncontrol():
     if 'userid' not in session:
         return redirect('./') #no form data is carried across using 'dot/'
-    results = None
-    return render_template("missioncontrol.html", configured = robot.Configured, voltage = robot.get_battery())
+    locationdetails = database.ViewQueryHelper("SELECT State, Suburb, Street, Number FROM LocationTbl")
+    locations = []
+    if locationdetails != 0:
+        for location in locationdetails:
+            locations.append(str(location['Number']) + " " + str(location['Street']) + " " +  str(location['Suburb']) + " " + str(location['State']))
+    else:
+        locations = "No Past Locations"
+    return ender_template("missioncontrol.html", configured = robot.Configured, voltage = robot.get_battery(), locations)
 
 #dashboard
 @app.route('/sensorview', methods=['GET','POST'])

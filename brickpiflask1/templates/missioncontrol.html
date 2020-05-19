@@ -13,8 +13,21 @@
     }
 </style>
 
+
+            
 <h3>Voltage = {{voltage}}</h3>
 <div class="container">
+    <form>
+        <div class="form-group">
+            <label for="exampleInputEmail1">Subject</label>
+            <select name="pastlocation" class="form-control">
+                {% for location in locations %}
+                    <option value={{location}}>{{location}}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <input class = "btn btn-info" type="submit" onclick="JSONrequest('/pastlocation', 'POST')">
+    </form>
     <div class="row">
         <h3 id="message"></h3>
     </div>
