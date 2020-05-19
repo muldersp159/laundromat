@@ -30,7 +30,6 @@
 
     {% block content %}{% endblock %} <!-- Container for Content -->
     <footer>
-        <a href="https://github.com/bradnielsen2981/brickpiflask">The full code can be found on Github</a>
         {% for message in get_flashed_messages() %}
         <div class='alert'>
             {{message}}

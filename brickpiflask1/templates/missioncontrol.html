@@ -1,69 +1,75 @@
 {% extends "layout.html" %}
 {% block content %}
-<h2>Sample Web Interface using Bootstrap</h2><br/>
-<p>The buttons when clicked run a special script that can be used to send data to the server without a form (and the necessary page refresh). This helper script uses JSON (a method of sending complex data through text encoding).</p>
-<p>The helper function can be used as follows <b>JSONrequest</b>(/url, "POST",name_of_callback_function, {var1:"value1",var2:"value2"...})</p><p><i>The callback function receives a result object that contains response data.</i></p><p>A simpler call can be made: <b>JSONrequest</b>(/url, "POST") if you do not wish to send or receive data.</p>
+<style>
+    table {
+      font-family: arial, sans-serif;
+      border: none;
+      width: 100%;
+    }
+
+    td {
+      width: 33%;
+      padding: 5px;
+    }
+</style>
+
 <h3>Voltage = {{voltage}}</h3>
 <div class="container">
     <div class="row">
         <h3 id="message"></h3>
     </div>
-    <div class="container">
-        <canvas id="mycanvas" style="border:1px solid black"; height=480 width=640></canvas>
-    </div>
-    <div class="container">
-        <div class="row text-center">
-          <div class="col-4">
-            <button type="button" class="btn btn-dark" onclick="JSONrequest('/turnleft','POST')">Turn Left</button>
-          </div>
-          <div class="col-4">
-            <button type="button" class="btn btn-success" onclick="JSONrequest('/forward','POST',draw_path)">Forward</button>
-          </div>
-          <div class="col-4">
-            <button type="button" class="btn btn-dark" onclick="JSONrequest('/turnright','POST')">Turn Right</button>
-          </div>
-          
-          <div class="col-4">
-            <button type="button" class="btn btn-success" style="background-color: white; border: none;" onclick=""></button>
-          </div>
-          <div class="col-4">
-            <button type="button" class="btn btn-success" style="background-color: white; border: none;" onclick=""></button>
-          </div>
-          <div class="col-4">
-            <button type="button" class="btn btn-success" style="background-color: white; border: none;" onclick=""></button>
-          </div>
-          
-          <div class="col-4">
-            <button type="button" class="btn btn-danger" onclick="JSONrequest('/stop','POST')">Stop</button>
-          </div>
-          <div class="col-4">
-            <button type="button" class="btn btn-success" onclick="JSONrequest('/reverse','POST')">Reverse</button>
-          </div>
-          <div class="col-4">
-            <button type="button" class="btn btn-danger" onclick="shutdownserver()">Shutdown Server</button>
-          </div>
-          
-          <div class="col-4">
-            <button type="button" class="btn btn-success" style="background-color: white; border: none;" onclick=""></button>
-          </div>
-          <div class="col-4">
-            <button type="button" class="btn btn-success" style="background-color: white; border: none;" onclick=""></button>
-          </div>
-          <div class="col-4">
-            <button type="button" class="btn btn-success" style="background-color: white; border: none;" onclick=""></button>
-          </div>
-          
-          <div class="col-4">
-            <button type="button" class="btn btn-success" onclick="JSONrequest('/closeclaw','POST')">Close Claw</button>
-          </div>
-          <div class="col-4">
-            <button type="button" class="btn btn-success" onclick="JSONrequest('/tojunction', 'POST')">Automated Movement</button>
-          </div>
-          <div class="col-4">
-            <button type="button" class="btn btn-success" onclick="JSONrequest('/openclaw','POST')">Open Claw</button>
-          </div>
-        </div>
-      </div>
+    <table>
+        <tr>
+            <td><canvas id="mycanvas" style="border:1px solid black"; height=480 width=640></canvas></td>
+            <td>
+            <form action="/" method="POST">
+                <div class="form-group">
+                    <label for="exampleInputEmail1">State</label>
+                    <select name="state" class="form-control">
+                        <option value="QLD">QLD</option>
+                        <option value="VIC">VIC</option>
+                        <option value="CAN">CAN</option>
+                        <option value="NT">NT</option>
+                        <option value="SA">SA</option>
+                        <option value="TAS">TAS</option>
+                        <option value="WA">WA</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="exampleInputEmail1">Suburb</label>
+                    <input type="text" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" placeholder="" name="suburb">
+                </div>
+                <div class="form-group">
+                    <label for="exampleInputEmail1">Street Name</label>
+                    <input type="text" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" placeholder="" name="street">
+                </div>
+                <div class="form-group">
+                    <label for="exampleInputEmail1">House Number</label>
+                    <input type="number" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" placeholder="" name="number">
+                </div>
+                <input class = "btn btn-info" type="submit" value="Submit">
+            </form>
+            <br>
+            <table>
+                <tr>
+                    <td><button type="button" class="btn btn-dark" onclick="JSONrequest('/closeclaw','POST')">Close Claw</button></td>
+                    <td><button type="button" class="btn btn-success" onclick="JSONrequest('/forward','POST',draw_path)">Forward</button></td>
+                    <td><button type="button" class="btn btn-dark" onclick="JSONrequest('/openclaw','POST')">Open Claw</button></td>
+                </tr>
+                <tr>
+                    <td><button type="button" class="btn btn-success" onclick="JSONrequest('/turnleft','POST')">Turn Left</button></td>
+                    <td><button type="button" class="btn btn-danger" onclick="JSONrequest('/stop','POST')">Stop</button></tr>
+                    <td><button type="button" class="btn btn-success" onclick="JSONrequest('/turnright','POST')">Turn Right</button></td>
+                </tr>
+                <tr>
+                    <td><button type="button" class="btn btn-dark" onclick="JSONrequest('/tojunction', 'POST')">Automated Movement</button></td>
+                    <td><button type="button" class="btn btn-success" onclick="JSONrequest('/reverse','POST')">Reverse</button></td>
+                    <td><button type="button" class="btn btn-danger" onclick="shutdownserver()">Shutdown Server</button></td>
+                </tr>
+            </table></td>
+        </tr>
+    </table>
+      
 </div>
 {% endblock %}
 

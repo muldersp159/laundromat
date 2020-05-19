@@ -6,7 +6,7 @@ from interfaces.databaseinterface import DatabaseHelper
 from datetime import datetime
 
 #Create the database
-database = DatabaseHelper('test.sqlite')
+database = DatabaseHelper('Fire Robot.sqlite')
 #Create Robot first. It take 4 seconds to initialise the robot, sensor view wont work until robot is created...
 robot = yourrobot.Robot()
 if robot.get_battery() < 6: #the robot motors will disable at 6 volts
@@ -33,12 +33,11 @@ def index():
         email = request.form['email']   #get the form field with the name 
         password = request.form['password']
         # TODO - need to make sure only one user is able to login at a time...
-        userdetails = database.ViewQueryHelper("SELECT * FROM users WHERE email=? AND password=?",(email,password))
+        userdetails = database.ViewQueryHelper("SELECT * FROM UserTbl WHERE Email=? AND Password=?",(email,password))
         if len(userdetails) != 0:  #rows have been found
             row = userdetails[0] #userdetails is a list of dictionaries
-            session['userid'] = row['userid']
-            session['username'] = row['username']
-            session['permission'] = row['permission']
+            session['userid'] = row['UserID']
+            session['username'] = row['FullName']
             return redirect('./missioncontrol')
         else:
             flash("Sorry no user found, password or username incorrect")

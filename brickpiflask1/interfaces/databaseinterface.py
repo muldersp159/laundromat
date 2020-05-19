@@ -47,15 +47,18 @@ class DatabaseHelper():
         connection = self.connect()
         result = None
         try:
-            result = connection.execute(query, params)
+            if params:
+                connection.execute(query, params)
+            else:
+                connection.execute(query)
         except (sqlite3.OperationalError, sqlite3.Warning, sqlite3.Error) as e:
             self.logger.error("DATABASE ERROR: %s" % e)
             self.logger.error(query) 
         connection.commit()
         connection.close()
         return result #Should be a true or false depending on success??
-
-    # log some information
+   
+   # log some information
     def log(self, message):
         self.logger.info(message)
         return
