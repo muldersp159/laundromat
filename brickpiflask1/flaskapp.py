@@ -45,6 +45,17 @@ def index():
         flash("No data submitted")
     return render_template('index.html')
 
+@app.route('/locationform')
+def locationform():
+    state = request.form['state']
+    suburb = request.form['suburb']
+    street = request.form['street']
+    number = request.form['number']
+    if state == "" or suburb == "" or street == "" or number == "":
+        pass
+    else:
+        database.ModifyQueryHelper('INSERT INTO LocationTbl (State, Suburb, Street, Number) VALUES (?,?,?,?)',(state,suburb,street,number))
+
 #home page
 @app.route('/missioncontrol')
 def missioncontrol():
