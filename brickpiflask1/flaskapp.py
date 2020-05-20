@@ -90,12 +90,13 @@ def missioncontrol():
         return redirect('./') #no form data is carried across using 'dot/'
     locationdetails = database.ViewQueryHelper("SELECT State, Suburb, Street, Number FROM LocationTbl")
     locations = []
-    if locationdetails != 0:
+    print(locationdetails)
+    if len(locationdetails) != 0:
         for location in locationdetails:
             locations.append(str(location['Number']) + " " + str(location['Street']) + " " +  str(location['Suburb']) + " " + str(location['State']))
     else:
         locations = "No Past Locations"
-    return ender_template("missioncontrol.html", configured = robot.Configured, voltage = robot.get_battery(), locations)
+    return render_template("missioncontrol.html", configured = robot.Configured, voltage = robot.get_battery(), locations = locations)
 
 #dashboard
 @app.route('/sensorview', methods=['GET','POST'])

@@ -21,9 +21,13 @@
         <div class="form-group">
             <label for="exampleInputEmail1">Subject</label>
             <select name="pastlocation" class="form-control">
-                {% for location in locations %}
-                    <option value={{location}}>{{location}}</option>
-                {% endfor %}
+                {% if locations != "No Past Locations" %}
+                    {% for location in locations %}
+                        <option value={{location}}>{{location}}</option>
+                    {% endfor %}
+                {% else %}
+                    <option value={{locations}}>{{locations}}</option>
+                {% endif %}
             </select>
         </div>
         <input class = "btn btn-info" type="submit" onclick="JSONrequest('/pastlocation', 'POST')">
