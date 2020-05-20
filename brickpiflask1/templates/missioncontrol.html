@@ -17,7 +17,7 @@
             
 <h3>Voltage = {{voltage}}</h3>
 <div class="container">
-    <form>
+    <form action="/pastlocation" method="POST">
         <div class="form-group">
             <label for="exampleInputEmail1">Subject</label>
             <select name="pastlocation" class="form-control">
@@ -30,7 +30,7 @@
                 {% endif %}
             </select>
         </div>
-        <input class = "btn btn-info" type="submit" onclick="JSONrequest('/pastlocation', 'POST')">
+        <input class = "btn btn-info" type="submit">
     </form>
     <div class="row">
         <h3 id="message"></h3>
@@ -39,7 +39,7 @@
         <tr>
             <td><canvas id="mycanvas" style="border:1px solid black"; height=480 width=640></canvas></td>
             <td>
-            <form action="/" method="POST">
+            <form method="POST">
                 <div class="form-group">
                     <label for="exampleInputEmail1">State</label>
                     <select name="state" class="form-control">
@@ -64,7 +64,7 @@
                     <label for="exampleInputEmail1">House Number</label>
                     <input type="number" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" placeholder="" name="number">
                 </div>
-                <input class = "btn btn-info" type="submit" onclick="JSONrequest('/locationform', 'POST')">
+                <button type="button" class="btn btn-info" onclick="JSONrequest('/locationform','POST')">Submit</button>
             </form>
             <br>
             <table>
@@ -75,7 +75,7 @@
                 </tr>
                 <tr>
                     <td><button type="button" class="btn btn-success" onclick="JSONrequest('/turnleft','POST')">Turn Left</button></td>
-                    <td><button type="button" class="btn btn-danger" onclick="JSONrequest('/stop','POST')">Stop</button></tr>
+                    <td><button type="button" class="btn btn-danger" onclick="JSONrequest('/stop','POST')">Stop</button></td>
                     <td><button type="button" class="btn btn-success" onclick="JSONrequest('/turnright','POST')">Turn Right</button></td>
                 </tr>
                 <tr>

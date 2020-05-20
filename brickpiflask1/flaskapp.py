@@ -52,12 +52,13 @@ def startfire(state,suburb,street,number):
     starttime = time.time()
     database.ModifyQueryHelper('INSERT INTO FireTbl (LocationID, UserID, StartTime) VALUES (?,?,?)',(locationid,session['userid'],starttime))
 
-@app.route('/locationform')
+@app.route('/locationform', methods=['GET','POST'])
 def locationform():
     state = request.form['state']
     suburb = request.form['suburb']
     street = request.form['street']
     number = request.form['number']
+    print(street, number, suburb, state)
     if state != "" and suburb != "" and street != "" and number != "":
         locationid = database.ViewQueryHelper("SELECT LocationID FROM LocationTbl WHERE Number=? AND Street=? AND Suburb=? AND State=?",(number,street,suburb,state))
         if len(locationid) != 0:
@@ -66,10 +67,8 @@ def locationform():
             database.ModifyQueryHelper('INSERT INTO LocationTbl (State, Suburb, Street, Number) VALUES (?,?,?,?)',(state,suburb,street,number))
             startfire(state,suburb,street,number)
             return
-    else:
-        return
 
-@app.route('/pastlocation')
+@app.route('/pastlocation', methods=['GET','POST'])
 def pastlocation():
     location = request.form['pastlocation']
     if location != "No Past Locations":
