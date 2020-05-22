@@ -4,8 +4,51 @@
 {% endblock %}
 {% block content %}
     <div class="container">
-        <!-- area for real time chart-->
-        <canvas id="map" style="border:1px solid black; width:700px; height:700px;">
-        </canvas>
+        <form action='/reviewedfireform' method="POST">
+            <div class="form-group">
+                <label for="exampleInputEmail1">Select A Past Fire</label>
+                    <select name="reviewedfire" class="form-control" id="stateinput">
+                        {% if fires != "No Past Fires" %}
+                            {% for fire in fires %}
+                                <option value={{fire['id']}}>{{fire['details']}}</option>
+                            {% endfor %}
+                        {% else %}
+                            <option value={{fires}}>{{fires}}</option>
+                        {% endif %}
+                    </select>
+                </div>
+            <input class="btn btn-info" type="submit" value="See Data From This Fire">
+        </form>
+        {% if 'reviewedfire' in session and events != "no events" %}
+            <p>
+                During this fire, the robot was being opperated by {{username}}.<br>
+                This fire took place at {{reviewedlocationdetails['Number']}} {{reviewedlocationdetails['Street']}}, {{reviewedlocationdetails['Suburb']}}, {{reviewedlocationdetails['State']}}.
+                This fire occured on {{reviewedfirestart.split()[0]}} at {{reviewedfirestart.split()[1]}}.
+            </p>
+            <table>
+                <tr>
+                    <th>Event Type</th>
+                    <th>Elapsed Time</th>
+                    <th>Temp</th>
+                    <th>Heading</th>
+                </tr>
+                {% for event in events %}
+                    <tr>
+                        <td>{{event['EventType']}}</td>
+                        <td>{{event['ElapsedTime']}}</td>
+                        <td>{{event['Temp']}}</td>
+                        <td>{{event['Heading']}}</td>
+                    </tr>
+                {% endfor %}
+            </table>
+        {% elif events == "no events" %}
+            <p>
+                During this fire, the robot was being opperated by {{username}}.<br>
+                This fire took place at {{reviewedlocationdetails['Number']}} {{reviewedlocationdetails['Street']}}, {{reviewedlocationdetails['Suburb']}}, {{reviewedlocationdetails['State']}}.<br>
+                This fire occured on {{reviewedfirestart.split()[0]}} at {{reviewedfirestart.split()[1]}}.
+            </p>
+                Sorry. There are no events saved with this fire.
+            <p>
+        {% endif %}
     </div>
 {% endblock %}

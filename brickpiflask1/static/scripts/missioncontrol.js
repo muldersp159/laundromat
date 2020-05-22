@@ -27,7 +27,7 @@ function draw_path(result){
 
 function draw_path_automated(result){
     console.log(result);
-    if (result.command == "auto moving forward")
+    if (result.command == "Auto Moving Forward")
     {
         turtle.angle(result.heading);
         turtle.go(1.5*10).stroke();
@@ -35,7 +35,7 @@ function draw_path_automated(result){
 }
 
 function command_test(result) {
-    if (result.currentcommand == "auto moving forward")
+    if (result.currentcommand == "Auto Moving Forward")
     {
         JSONrequest('/getmovement','POST', draw_path_automated);
     }

@@ -515,20 +515,26 @@ class BrickPiInterface():
     #open the claw
     def open_claw(self, degrees=-1200):
         #self.CurrentCommand = 'open claw'
+        starttime = time.time()
+        elapsedtime = ""
         if self.claw_closed == True:
             self.__move_claw_targetdegrees(degrees)
             self.claw_closed = False
             #self.CurrentCommand = 'stop'
-        return
+            elapsedtime = time.time() - starttime
+        return elapsedtime
 
     #close the claw
     def close_claw(self, degrees=1200):
         #self.CurrentCommand = 'close claw'
+        starttime = time.time()
+        elapsedtime = ""
         if self.claw_closed == False:
             self.__move_claw_targetdegrees(degrees)
             self.claw_closed = True   
             #self.CurrentCommand = 'stop'
-        return
+            elapsedtime = time.time() - starttime
+        return elapsedtime
 
     #returns the current command
     def get_current_command(self):

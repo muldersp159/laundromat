@@ -1,5 +1,5 @@
 var recurringhandle = null;  //can be used to delete recurring function if you want
-recurringhandle = setInterval(get_map_data, 3000);
+//recurringhandle = setInterval(get_map_data, 3000);
 
 //THis recurring function gets data using JSON
 function get_map_data() {

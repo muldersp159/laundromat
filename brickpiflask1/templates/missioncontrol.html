@@ -17,21 +17,23 @@
             
 <h3>Voltage = {{voltage}}</h3>
 <div class="container">
-    <form action="/pastlocation" method="POST">
-        <div class="form-group">
-            <label for="exampleInputEmail1">Subject</label>
-            <select name="pastlocation" class="form-control">
-                {% if locations != "No Past Locations" %}
-                    {% for location in locations %}
-                        <option value={{location}}>{{location}}</option>
-                    {% endfor %}
-                {% else %}
-                    <option value={{locations}}>{{locations}}</option>
-                {% endif %}
-            </select>
-        </div>
-        <input class = "btn btn-info" type="submit">
-    </form>
+    {% if 'locationid' not in session %}
+        <form action="/pastlocation" method="POST">
+            <div class="form-group">
+                <label for="exampleInputEmail1">Subject</label>
+                <select name="pastlocation" class="form-control">
+                    {% if locations != "No Past Locations" %}
+                        {% for location in locations %}
+                            <option value={{location['id']}}>{{location['location']}}</option>
+                        {% endfor %}
+                    {% else %}
+                        <option value={{locations}}>{{locations}}</option>
+                    {% endif %}
+                </select>
+            </div>
+            <input class="btn btn-info" type="submit" value="Start Recording Fire At This Location">
+        </form>
+    {% endif %}
     <div class="row">
         <h3 id="message"></h3>
     </div>
@@ -39,33 +41,37 @@
         <tr>
             <td><canvas id="mycanvas" style="border:1px solid black"; height=480 width=640></canvas></td>
             <td>
-            <form method="POST">
-                <div class="form-group">
-                    <label for="exampleInputEmail1">State</label>
-                    <select name="state" class="form-control">
-                        <option value="QLD">QLD</option>
-                        <option value="VIC">VIC</option>
-                        <option value="CAN">CAN</option>
-                        <option value="NT">NT</option>
-                        <option value="SA">SA</option>
-                        <option value="TAS">TAS</option>
-                        <option value="WA">WA</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="exampleInputEmail1">Suburb</label>
-                    <input type="text" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" placeholder="" name="suburb">
-                </div>
-                <div class="form-group">
-                    <label for="exampleInputEmail1">Street Name</label>
-                    <input type="text" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" placeholder="" name="street">
-                </div>
-                <div class="form-group">
-                    <label for="exampleInputEmail1">House Number</label>
-                    <input type="number" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" placeholder="" name="number">
-                </div>
-                <button type="button" class="btn btn-info" onclick="JSONrequest('/locationform','POST')">Submit</button>
-            </form>
+            {% if 'locationid' not in session %}
+                <form action='/locationform' method="POST">
+                    <div class="form-group">
+                        <label for="exampleInputEmail1">State</label>
+                        <select name="state" class="form-control" id="stateinput">
+                            <option value="QLD">QLD</option>
+                            <option value="VIC">VIC</option>
+                            <option value="CAN">CAN</option>
+                            <option value="NT">NT</option>
+                            <option value="SA">SA</option>
+                            <option value="TAS">TAS</option>
+                            <option value="WA">WA</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="exampleInputEmail1">Suburb</label>
+                        <input type="text" class="form-control" id="suburbinput" aria-describedby="emailHelp" placeholder="" name="suburb">
+                    </div>
+                    <div class="form-group">
+                        <label for="exampleInputEmail1">Street Name</label>
+                        <input type="text" class="form-control" id="streetinput" aria-describedby="emailHelp" placeholder="" name="street">
+                    </div>
+                    <div class="form-group">
+                        <label for="exampleInputEmail1">House Number</label>
+                        <input type="number" class="form-control" id="numberinput" aria-describedby="emailHelp" placeholder="" name="number">
+                    </div>
+                    <input class="btn btn-info" type="submit" value="Start Recording Fire At This Location">
+                </form>
+            {% else %}
+                <div class = "form-group"><button type="button" class="btn btn-danger" onclick="JSONrequest('/endfire','GET')">Stop Recording Fire</button><div>
+            {% endif %}
             <br>
             <table>
                 <tr>
