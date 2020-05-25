@@ -85,8 +85,9 @@ def locationform():
             database.ModifyQueryHelper('INSERT INTO LocationTbl (State, Suburb, Street, Number) VALUES (?,?,?,?)',(state,suburb,street,number))
             locationidreturn = database.ViewQueryHelper("SELECT LocationID FROM LocationTbl WHERE Number=? AND Street=? AND Suburb=? AND State=?",(number,street,suburb,state))
             row = locationidreturn[0]
+            log(row['LocationID'])
             session['locationid'] = row['LocationID']
-            startfire(state,suburb,street,number)
+            startfire()
             return redirect('/missioncontrol')
 
 @app.route('/pastlocation', methods=['GET','POST'])
@@ -277,7 +278,7 @@ def identifyjunction():
             duration = 0
             robot.CurrentCommand = "Junction Detected"
             saveevent(duration)
-            if session['DetectingIntersections'] == True
+            if session['DetectingIntersections'] == True:
                 navigateintersection("intersection")
             else:
                 session['DetectingIntersections'] = True
@@ -318,7 +319,7 @@ def collectvictim():
 def navigateintersection(collisiontype):
     if session['DetectingIntersections'] == True:
         #robot.move_power_time(RPOWER, LPOWER, time)
-        session['DetectingIntersections'in] = False
+        session['DetectingIntersections'] = False
     robot.CurrentCommand = "Navigating Intersection"
     starttime = time.time()
     if session['VictimFound'] == False:
