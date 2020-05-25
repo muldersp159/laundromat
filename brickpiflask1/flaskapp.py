@@ -52,7 +52,7 @@ def endfire():
     session.clear()
     session['userid'] = userid
     session['FoundVictim'] = False
-    return redirect('./missioncontrol')
+    return redirect('/missioncontrol')
 
 def saveevent(elapsedtime):
     if 'locationid' in session and 'fireid' in session:
@@ -63,6 +63,7 @@ def saveevent(elapsedtime):
 
 def startfire():
     starttime = datetime.datetime.now()
+    starttime = str(starttime)[:19]
     database.ModifyQueryHelper('INSERT INTO FireTbl (LocationID, UserID, StartTime) VALUES (?,?,?)',(session['locationid'],session['userid'],starttime))
     firedetails = database.ViewQueryHelper("SELECT FireID FROM FireTbl WHERE LocationID=? AND UserID=? AND StartTime=?",(session['locationid'],session['userid'],starttime))
     row = firedetails[0]
@@ -150,14 +151,9 @@ def pastfires():
     reviewedfirestart = []
     username = ""
     if 'reviewedfire' in session:
-        events = database.ViewQueryHelper("SELECT EventType, ElapsedTime, Temp, Heading FROM EventsTbl WHERE FireID = ? ORDER BY EventID ASC ", (session['reviewedfire'],))
-        user = database.ViewQueryHelper("SELECT UserTbl.FullName From UserTbl, FireTbl WHERE UserTbl.UserID = FireTbl.UserID AND FireTbl.FireID = ?",(session['reviewedfire'],))
-        row = user[0]
-        username = row['FullName']
-        reviewedlocationdetailsreturned = database.ViewQueryHelper("SELECT LocationTbl.State, LocationTbl.Suburb, LocationTbl.Street, LocationTbl.Number FROM LocationTbl, FireTbl WHERE FireTbl.LocationID = LocationTbl.LocationID AND FireTbl.FireID=?",(session['reviewedfire'],))
+        events = database.ViewQueryHelper("SELECT EventType, ElapsedTime, Temp, Heading FROM EventsTbl WHERE FireID = ? ORDER BY EventID ASC", (session['reviewedfire'],))
+        reviewedlocationdetailsreturned = database.ViewQueryHelper("SELECT LocationTbl.State, LocationTbl.Suburb, LocationTbl.Street, LocationTbl.Number, UserTbl.FullName, FireTbl.StartTime FROM LocationTbl, FireTbl, UserTbl WHERE FireTbl.LocationID = LocationTbl.LocationID AND FireTbl.FireID=? AND FireTbl.UserID = UserTBl.UserID;",(session['reviewedfire'],))
         reviewedlocationdetails = reviewedlocationdetailsreturned[0]
-        reviewedfirestartreturn = database.ViewQueryHelper("SELECT StartTime From FireTBl Where FireID = ?", (session['reviewedfire'],))
-        reviewedfirestart = reviewedfirestartreturn[0]['StartTime']
         if len(events) == 0:
             events = "no events"
     firedetails = database.ViewQueryHelper("SELECT FireID, LocationID, StartTime FROM FireTbl WHERE Complete = ?",("True",))
@@ -172,7 +168,7 @@ def pastfires():
             fires.append({"details":str(location['Number']) + " " + str(location['Street']) + " " +  str(location['Suburb']) + " " + str(location['State']) + " on " + str(date) + " at " + str(time),"id":fire['FireID']})
     else:
         locations = "No Past Fires"
-    return render_template('map.html', fires = fires, configured = robot.Configured, session = session, events = events, username = username, reviewedlocationdetails = reviewedlocationdetails, reviewedfirestart = reviewedfirestart)
+    return render_template('map.html', fires = fires, configured = robot.Configured, session = session, events = events, details = reviewedlocationdetails)
 
 #start robot moving
 @app.route('/forward', methods=['GET','POST'])

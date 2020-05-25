@@ -3,6 +3,32 @@
     <script src="/static/scripts/map.js"></script>
 {% endblock %}
 {% block content %}
+    <style>
+        table {
+            font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
+            border-collapse: collapse;
+            width: 100%;
+            border-radius: 5px;
+        }
+
+        td, th {
+            border: 1px solid #ddd;
+            padding: 8px;
+            width: 25%;
+        }
+
+        tr:nth-child(even){
+            background-color: #f2f2f2;
+        }
+
+        th {
+          padding-top: 12px;
+          padding-bottom: 12px;
+          text-align: left;
+          background-color: #00b8e6;
+          color: white;
+        }
+    </style>
     <div class="container">
         <form action='/reviewedfireform' method="POST">
             <div class="form-group">
@@ -18,14 +44,14 @@
                     </select>
                 </div>
             <input class="btn btn-info" type="submit" value="See Data From This Fire">
-        </form>
+        </form><br>
         {% if 'reviewedfire' in session and events != "no events" %}
             <p>
-                During this fire, the robot was being opperated by {{username}}.<br>
-                This fire took place at {{reviewedlocationdetails['Number']}} {{reviewedlocationdetails['Street']}}, {{reviewedlocationdetails['Suburb']}}, {{reviewedlocationdetails['State']}}.
-                This fire occured on {{reviewedfirestart.split()[0]}} at {{reviewedfirestart.split()[1]}}.
-            </p>
-            <table>
+                During this fire, the robot was being opperated by {{details['FullName']}}.<br>
+                This fire took place at {{details['Number']}} {{details['Street']}}, {{details['Suburb']}}, {{details['State']}}.
+                This fire occured on {{details['StartTime'].split()[0]}} at {{details['StartTime'].split()[1]}}.
+            </p><br>
+            <table id="events">
                 <tr>
                     <th>Event Type</th>
                     <th>Elapsed Time</th>
