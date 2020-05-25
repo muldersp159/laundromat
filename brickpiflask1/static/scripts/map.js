@@ -20,13 +20,10 @@ function go_through_events(results){
         var i = 0;
         var h = 1;
         var e = 2;
-        console.log(results.events.length)
         while (i < results.events.length) {
-            console.log(results);
             var eventtype = results.events[i];
             var elapsedtime = results.events[e];
             var heading = results.events[h];
-            console.log(eventtype);
             if (eventtype == "Moving Forward" || eventtype == "Auto Moving Forward"){
                 turtle.angle(heading);
                 turtle.go(10*elapsedtime).stroke();

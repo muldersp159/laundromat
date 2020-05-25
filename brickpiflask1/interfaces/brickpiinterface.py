@@ -354,7 +354,8 @@ class BrickPiInterface():
         #self.CurrentCommand = "move_power_time"
         timelimit = time.time() + t
         while time.time() < timelimit and self.CurrentCommand != "stop":
-            bp.set_motor_power(self.largemotors, power)
+            bp.set_motor_power(bp.PORT_A, Rpower)
+            bp.set_motor_power(bp.PORT_B, Lpower)
         #self.CurrentCommand = "stop"
         self.BP.set_motor_power(self.largemotors, 0)
         return
@@ -377,7 +378,7 @@ class BrickPiInterface():
         while (self.CurrentCommand != "stop"):
             ##if sensor fails, or distanceto has been reached quit, or distancedetected = 0
             distancedetected = self.get_ultra_sensor()
-            self.log("MOVING - Distance detected: " + str(distancedetected))
+            #self.log("MOVING - Distance detected: " + str(distancedetected))
             if ((self.config['ultra'] > DISABLED) or (distancedetected < distanceto and distancedetected != 0.0)): 
                 collisiontype = "objectdetected"
                 break 
@@ -426,13 +427,13 @@ class BrickPiInterface():
         starttime = time.time()
         timelimit = starttime + self.timelimit
          
-        self.log("target degrees: " + str(degrees))
-        self.log(str(totaldegreesrotated) + str(symbol) + str(limit))
+        #self.log("target degrees: " + str(degrees))
+        #self.log(str(totaldegreesrotated) + str(symbol) + str(limit))
         while eval("totaldegreesrotated" + str(symbol) + "limit") and (self.CurrentCommand != "stop") and (time.time() < timelimit) and self.config['imu'] < DISABLED:
             lastrun = time.time()
             bp.set_motor_power(self.rightmotor, power)
             bp.set_motor_power(self.leftmotor, -power)
-            self.log("Total degrees rotated: " + str(totaldegreesrotated))
+            #self.log("Total degrees rotated: " + str(totaldegreesrotated))
             gyrospeed = self.get_gyro_sensor_IMU()[2] #roate around z-axis
             totaldegreesrotated += (time.time() - lastrun)*gyrospeed
         bp.set_motor_power(self.largemotors, 0) #stop
@@ -458,7 +459,7 @@ class BrickPiInterface():
         else:
             symbol = '>='; limit = targetheading+marginoferror; 
         expression = 'heading' + symbol + 'limit'
-        self.log('heading'+symbol+str(limit))
+        #self.log('heading'+symbol+str(limit))
         
         elapsedtime = 0; starttime = time.time(); timelimit = starttime + self.timelimit
          
@@ -467,7 +468,7 @@ class BrickPiInterface():
             bp.set_motor_power(self.rightmotor, -power)
             bp.set_motor_power(self.leftmotor, power)
             heading = self.get_compass_IMU()
-            self.log("Current heading: " + str(heading))
+            #self.log("Current heading: " + str(heading))
         #self.CurrentCommand = "stop"
         bp.set_motor_power(self.largemotors, 0) #stop
         elapsedtime = time.time() - starttime

@@ -27,6 +27,7 @@ junctionColour = "Red"
 @app.route('/', methods=['GET','POST'])
 def index():
     session['VictimFound'] = False
+    session['DetectingIntersections'] = True
     if 'userid' in session:
         return redirect('./missioncontrol') #no form data is carried across using 'dot/'
     if request.method == "POST":  #if form data has been sent
@@ -272,11 +273,16 @@ def identifyjunction():
     robot.CurrentCommand = "Identifying Junction"
     if robot.CurrentCommand != "stop":
         distancemeasured = robot.get_ultra_sensor()
-        if distancemeasured >= 20 and distancemeasured != 0.0:
+        if distancemeasured > 20 and distancemeasured != 0.0:
             duration = 0
             robot.CurrentCommand = "Junction Detected"
             saveevent(duration)
-            navigateintersection("intersection")
+            if session['DetectingIntersections'] == True
+                navigateintersection("intersection")
+            else:
+                session['DetectingIntersections'] = True
+                #robot.move_power_time(RPOWER, LPOWER, time) to get of the red tape when you know that you are exiting a junction
+                movetojunction()
         else:   
             tempmeasured = robot.get_thermal_sensor()
             if tempmeasured > 40:
@@ -288,7 +294,7 @@ def identifyjunction():
             elif tempmeasured < 20:
                 #using an icepack or cold can of soft drint for victim
                 duration = 0
-                robot.CurrentCOmmand = "Victim Found"
+                robot.CurrentCommand = "Victim Found"
                 saveevent(duration)
                 session['VictimFound'] = True
                 collectvictim()
@@ -310,6 +316,9 @@ def collectvictim():
     movetojunction()
 
 def navigateintersection(collisiontype):
+    if session['DetectingIntersections'] == True:
+        #robot.move_power_time(RPOWER, LPOWER, time)
+        session['DetectingIntersections'in] = False
     robot.CurrentCommand = "Navigating Intersection"
     starttime = time.time()
     if session['VictimFound'] == False:
@@ -328,7 +337,7 @@ def navigateintersection(collisiontype):
                 if collisiontype == "intersection":
                     robot.rotate_power_degrees_IMU(20, 90)
                     distancemeasured = robot.get_ultra_sensor()
-                    if distancemeasured >= 40 and distancemeasured != 0.0:
+                    if distancemeasured >= 30 and distancemeasured != 0.0:
                         elapsedtime = time.time() - starttime
                         saveevent(elapsedtime)
                         robot.CurrentCommand = "Went Straight"
@@ -339,7 +348,7 @@ def navigateintersection(collisiontype):
                     else:
                         duration = robot.rotate_power_degrees_IMU(20, 90)
                         distancemeasured = robot.get_ultra_sensor()
-                        if distancemeasured >= 40 and distancemeasured != 0.0:
+                        if distancemeasured >= 30 and distancemeasured != 0.0:
                             elapsedtime = time.time() - starttime
                             saveevent(elapsedtime)
                             robot.CurrentCommand = "Turned Right"
@@ -359,7 +368,7 @@ def navigateintersection(collisiontype):
                 elif collisiontype == "wall" or collisiontype == "fire":
                     robot.rotate_power_degrees_IMU(20, 180)
                     distancemeasured = robot.get_ultra_sensor()
-                    if distancemeasured >= 40 and distancemeasured != 0.0:
+                    if distancemeasured >= 30 and distancemeasured != 0.0:
                         elapsedtime = time.time() - starttime
                         saveevent(elapsedtime)
                         robot.CurrentCommand = "Turned Right"
@@ -380,7 +389,7 @@ def navigateintersection(collisiontype):
         duration = robot.rotate_power_degrees_IMU(20, 90)
         if robot.CurrentCommand != "stop":
             distancemeasured = robot.get_ultra_sensor() #reading ultrasonic to see if there is a wall infront
-            if distancemeasured >= 40 and distancemeasured != 0.0:
+            if distancemeasured >= 30 and distancemeasured != 0.0:
                 elapsedtime = time.time() - starttime
                 saveevent(elapsedtime)
                 robot.CurrentCommand = "Turned Right"
@@ -392,7 +401,7 @@ def navigateintersection(collisiontype):
                 if collisiontype == "intersection":
                     duration = robot.rotate_power_degrees_IMU(20, -90)
                     distancemeasured = robot.get_ultra_sensor()
-                    if distancemeasured >= 40 and distancemeasured != 0.0:
+                    if distancemeasured >= 30 and distancemeasured != 0.0:
                         elapsedtime = time.time() - starttime
                         saveevent(elapsedtime)
                         robot.CurrentCommand = "Went Straight"
@@ -403,7 +412,7 @@ def navigateintersection(collisiontype):
                     else:
                         duration = robot.rotate_power_degrees_IMU(20, -90)
                         distancemeasured = robot.get_ultra_sensor()
-                        if distancemeasured >= 40 and distancemeasured != 0.0:
+                        if distancemeasured >= 30 and distancemeasured != 0.0:
                             elapsedtime = time.time() - starttime
                             saveevent(elapsedtime)
                             robot.CurrentCommand = "Turned Left"
@@ -422,7 +431,7 @@ def navigateintersection(collisiontype):
                 elif collisiontype == "wall" or collisiontype == "fire":
                     duration = robot.rotate_power_degrees_IMU(20, 180)
                     distancemeasured = robot.get_ultra_sensor()
-                    if distancemeasured >= 40 and distancemeasured != 0.0:
+                    if distancemeasured >= 30 and distancemeasured != 0.0:
                         elapsedtime = time.time() - starttime
                         saveevent(elapsedtime)
                         robot.CurrentCommand = "Turned Left"
@@ -520,7 +529,6 @@ def stop():
 @app.route('/shutdown', methods=['GET','POST'])
 def shutdown():
     session.clear()
-    session['FoundVictim'] = False
     robot.safe_exit()
     func = request.environ.get('werkzeug.server.shutdown')
     func()
