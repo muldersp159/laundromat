@@ -310,7 +310,7 @@ def collectvictim():
     movetojunction()
 
 def navigateintersection(collisiontype):
-    robot.CurrentCommand = "navigating intersection"
+    robot.CurrentCommand = "Navigating Intersection"
     starttime = time.time()
     if session['VictimFound'] == False:
         robot.rotate_power_degrees_IMU(20, -90)
@@ -439,7 +439,7 @@ def navigateintersection(collisiontype):
                         saveevent(duration)
                         movetojunction()
                         #reversed
-    return jsonify({ "message":"navigating intersection"})
+    return jsonify({ "message":"Navigating Intersection"})
 
 '''def navigatewall():
     robot.CurrentCommand = "navigating wall"
