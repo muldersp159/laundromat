@@ -1,7 +1,4 @@
 {% extends "layout.html" %}
-{% block scripts %}
-    <script src="/static/scripts/map.js"></script>
-{% endblock %}
 {% block content %}
     <style>
         table {
@@ -51,6 +48,7 @@
                 This fire took place at {{details['Number']}} {{details['Street']}}, {{details['Suburb']}}, {{details['State']}}.
                 This fire occured on {{details['StartTime'].split()[0]}} at {{details['StartTime'].split()[1]}}.
             </p><br>
+            <canvas id="mycanvas" style="border:1px solid black"; height=480 width=640></canvas>
             <table id="events">
                 <tr>
                     <th>Event Type</th>
@@ -70,11 +68,17 @@
         {% elif events == "no events" %}
             <p>
                 During this fire, the robot was being opperated by {{username}}.<br>
-                This fire took place at {{reviewedlocationdetails['Number']}} {{reviewedlocationdetails['Street']}}, {{reviewedlocationdetails['Suburb']}}, {{reviewedlocationdetails['State']}}.<br>
-                This fire occured on {{reviewedfirestart.split()[0]}} at {{reviewedfirestart.split()[1]}}.
+                This fire took place at {{details['Number']}} {{details['Street']}}, {{details['Suburb']}}, {{details['State']}}.<br>
+                This fire occured on {{details['StartTime'].split()[0]}} at {{details['StartTIme'].split()[1]}}.
             </p>
-                Sorry. There are no events saved with this fire.
+                Sorry. There are no events saved for this fire.
             <p>
         {% endif %}
     </div>
+{% endblock %}
+
+{% block scripts %}
+    <script src="/static/scripts/hsv.js"></script>
+    <script src="/static/scripts/pen.js"></script>
+    <script src="/static/scripts/map.js"></script>
 {% endblock %}

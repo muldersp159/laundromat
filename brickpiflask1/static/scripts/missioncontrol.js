@@ -30,7 +30,7 @@ function draw_path_automated(result){
     if (result.command == "Auto Moving Forward")
     {
         turtle.angle(result.heading);
-        turtle.go(1.5*10).stroke();
+        turtle.go(10).stroke();
     }
 }
 

@@ -132,7 +132,18 @@ def getallstats():
 
 @app.route('/getevents', methods=['GET','POST'])
 def getevents():
-    return None
+    events = "no events"
+    if "reviewedfire" in session:
+        returnedevents = database.ViewQueryHelper("SELECT EventType, ElapsedTime, Temp, Heading FROM EventsTbl WHERE FireID = ? ORDER BY EventID ASC", (session['reviewedfire'],))
+        if len(returnedevents) == 0:
+            events = "no events"
+        else:
+            events = []
+            for event in returnedevents:
+                events.append(event['EventType'])
+                events.append(event['Heading'])
+                events.append(event['ElapsedTime'])
+    return jsonify({"events":events})
 
 @app.route('/reviewedfireform', methods=['GET','POST'])
 def reviewedlocationform():
