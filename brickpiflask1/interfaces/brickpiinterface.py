@@ -349,7 +349,7 @@ class BrickPiInterface():
         return
 
     #moves for the specified time (seconds) and power - use negative power to reverse
-    def move_power_time(self, power, t):
+    def move_power_time(self, Rpower, Lpower, t):
         bp = self.BP
         #self.CurrentCommand = "move_power_time"
         timelimit = time.time() + t

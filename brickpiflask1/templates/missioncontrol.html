@@ -71,6 +71,7 @@
                 </form>
             {% else %}
                 <div class = "form-group"><button type="button" class="btn btn-danger" onclick="JSONrequest('/endfire','GET')">Stop Recording Fire</button><div>
+                <br><img src="{{ url_for('video_feed')}}" width=100%><br>
             {% endif %}
             <br>
             <table>

@@ -1,9 +1,19 @@
-from flask import Flask, render_template, jsonify, redirect, request, session, flash
+from flask import Flask, render_template, jsonify, redirect, request, session, flash, Response
 import logging #allow loggings
 import time, sys, json
 import yourrobot #import in your own robot functionality
 from interfaces.databaseinterface import DatabaseHelper
 import datetime
+from picamera import PiCamera
+from time import sleep
+from camera_pi import Camera
+
+
+'''camera = PiCamera()
+camera.start_preview(alpha=192)
+sleep(1)
+camera.capture("/home/pi/Desktop/brickpiflask/brickpiflask1/pic.jpg")
+camera.stop_preview()'''
 
 #Create the database
 database = DatabaseHelper('Fire Robot.sqlite')
@@ -24,6 +34,21 @@ junctionColour = "Red"
 
 #Request Handlers ---------------------------------------------
 #home page and login
+
+def gen(camera):
+    """Video streaming generator function."""
+    while True:
+        frame = camera.get_frame()
+        yield (b'--frame\r\n'
+               b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+
+
+@app.route('/video_feed')
+def video_feed():
+    """Video streaming route. Put this in the src attribute of an img tag."""
+    return Response(gen(Camera()),
+                    mimetype='multipart/x-mixed-replace; boundary=frame')
+
 @app.route('/', methods=['GET','POST'])
 def index():
     session['VictimFound'] = False
@@ -85,7 +110,6 @@ def locationform():
             database.ModifyQueryHelper('INSERT INTO LocationTbl (State, Suburb, Street, Number) VALUES (?,?,?,?)',(state,suburb,street,number))
             locationidreturn = database.ViewQueryHelper("SELECT LocationID FROM LocationTbl WHERE Number=? AND Street=? AND Suburb=? AND State=?",(number,street,suburb,state))
             row = locationidreturn[0]
-            log(row['LocationID'])
             session['locationid'] = row['LocationID']
             startfire()
             return redirect('/missioncontrol')
@@ -279,10 +303,16 @@ def identifyjunction():
             robot.CurrentCommand = "Junction Detected"
             saveevent(duration)
             if session['DetectingIntersections'] == True:
+                log("entering junction")
+                robot.move_power_time(RPOWER, LPOWER, 1.9)
+                log("moved off red tape (entering)")
+                session['DetectingIntersections'] = False
                 navigateintersection("intersection")
-            else:
+            elif session['DetectingIntersections'] == False:
+                log("exiting junciton")
+                robot.move_power_time(RPOWER, LPOWER, 0.5) #to get of the red tape when you know that you are exiting a junction
+                log("moved off red tape (exiting)")
                 session['DetectingIntersections'] = True
-                #robot.move_power_time(RPOWER, LPOWER, time) to get of the red tape when you know that you are exiting a junction
                 movetojunction()
         else:   
             tempmeasured = robot.get_thermal_sensor()
@@ -316,27 +346,27 @@ def collectvictim():
     saveevent(duration)
     movetojunction()
 
-def navigateintersection(collisiontype):
-    if session['DetectingIntersections'] == True:
-        #robot.move_power_time(RPOWER, LPOWER, time)
-        session['DetectingIntersections'] = False
+def navigateintersection(collisiontype):   
     robot.CurrentCommand = "Navigating Intersection"
     starttime = time.time()
     if session['VictimFound'] == False:
         robot.rotate_power_degrees_IMU(20, -90)
+        log("check left")
         if robot.CurrentCommand != "stop":
             distancemeasured = robot.get_ultra_sensor() #reading ultrasonic to see if there is a wall infront
-            if distancemeasured >= 40 and distancemeasured != 0.0:
+            if distancemeasured >= 30 and distancemeasured != 0.0:
                 elapsedtime = time.time() - starttime
                 saveevent(elapsedtime)
                 robot.CurrentCommand = "Turned Left"
                 duration = 0
                 saveevent(duration)
+                log("moved forward after turning left" + str(distancemeasured))
                 movetojunction()
                 #turned left
             else:
                 if collisiontype == "intersection":
                     robot.rotate_power_degrees_IMU(20, 90)
+                    log("check forward")
                     distancemeasured = robot.get_ultra_sensor()
                     if distancemeasured >= 30 and distancemeasured != 0.0:
                         elapsedtime = time.time() - starttime
@@ -344,11 +374,13 @@ def navigateintersection(collisiontype):
                         robot.CurrentCommand = "Went Straight"
                         duration = 0
                         saveevent(duration)
+                        log("went forward after turning right" + str(distancemeasured))
                         movetojunction()
                         #went straight
                     else:
                         duration = robot.rotate_power_degrees_IMU(20, 90)
                         distancemeasured = robot.get_ultra_sensor()
+                        log("check right" + str(distancemeasured))
                         if distancemeasured >= 30 and distancemeasured != 0.0:
                             elapsedtime = time.time() - starttime
                             saveevent(elapsedtime)
@@ -359,6 +391,7 @@ def navigateintersection(collisiontype):
                             #turned right
                         else:
                             robot.rotate_power_degrees_IMU(20, 90)
+                            log("go back")
                             elapsedtime = time.time() - starttime
                             saveevent(elapsedtime)
                             robot.CurrentCommand = "Reversed"
@@ -369,6 +402,7 @@ def navigateintersection(collisiontype):
                 elif collisiontype == "wall" or collisiontype == "fire":
                     robot.rotate_power_degrees_IMU(20, 180)
                     distancemeasured = robot.get_ultra_sensor()
+                    log("check right" + str(distancemeasured))
                     if distancemeasured >= 30 and distancemeasured != 0.0:
                         elapsedtime = time.time() - starttime
                         saveevent(elapsedtime)
@@ -379,6 +413,7 @@ def navigateintersection(collisiontype):
                         #turned right
                     else:
                         robot.rotate_power_degrees_IMU(20, 90)
+                        log("go back" + str(distancemeasured))
                         elapsedtime = time.time() - starttime
                         saveevent(elapsedtime)
                         robot.CurrentCommand = "Reversed"
