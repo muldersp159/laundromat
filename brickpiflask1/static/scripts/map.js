@@ -26,58 +26,66 @@ function go_through_events(results){
             var elapsedtime = results.events[e];
             var heading = results.events[h];
             if (eventtype == "Moving Forward" || eventtype == "Auto Moving Forward"){
-                turtle.penstyle("#000")
-                console.log("balck pen for moving forward")
+                turtle.set();
+                turtle.begin();
+                turtle.home();
+                turtle.pensize(3);
+                turtle.penstyle("#000");
                 turtle.angle(heading);
-                turtle.go(10*elapsedtime).stroke();
+                turtle.go(15*elapsedtime).stroke();
             }
             
-            if (eventtype == "Fire Detected"){
+            else if (eventtype == "Fire Detected"){
                 turtle.penup();
                 turtle.angle(heading);
-                turtle.go(2);
+                turtle.go(5);
+                turtle.set();
+                turtle.begin();
+                turtle.home();
+                turtle.pensize(0);
                 turtle.pendown();
-                turtle.penstyle("#ff9933");
+                turtle.fillstyle("#ff9933");
                 turtle.turn(-90)
-                turtle.go(2.5).stroke();
+                turtle.go(5).fill();
                 var t = 1;
                 while (t < 3){
                     turtle.turn(120);
-                    turtle.go(5).stroke();
+                    turtle.go(10).fill();
                     t = t + 1
                 }
                 turtle.turn(120);
-                turtle.go(2.5).stroke();
+                turtle.go(5).fill();
                 turtle.turn(-90);
                 turtle.penup();
-                turtle.go(2);
+                turtle.go(5);
                 turtle.angle(heading);
-                turtle.penstyle("#000");
-                console.log("changing pen back to black")
                 turtle.pendown();  
             }
             
-            if (eventtype == "Victim Found"){
+            else if (eventtype == "Victim Found"){
                 turtle.penup();
                 turtle.angle(heading);
-                turtle.go(2);
+                turtle.go(5);
+                turtle.set();
+                turtle.begin();
+                turtle.home();
+                turtle.pensize(0);
                 turtle.pendown();
-                turtle.penstyle("#33cc33");
+                turtle.fillstyle("#33cc33");
                 turtle.turn(-90)
-                turtle.go(2.5).stroke();
+                turtle.go(5).fill();
                 var t = 1
                 while (t < 4){
                     turtle.turn(90);
-                    turtle.go(5).stroke();
+                    turtle.go(10).fill();
                     t = t + 1
                 }
                 turtle.turn(90);
-                turtle.go(2.5).stroke();
+                turtle.go(5).fill();
                 turtle.turn(-90);
                 turtle.penup();
-                turtle.go(2);
+                turtle.go(5);
                 turtle.angle(heading);
-                turtle.penstyle("#000");
                 turtle.pendown();
             }
             var i = i + 3;

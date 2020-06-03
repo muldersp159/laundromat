@@ -22,63 +22,73 @@ function shutdownserver(){
 function draw_path(result){
     console.log(result);
     turtle.angle(result.heading);
-    turtle.go(result.duration*10).stroke();
+    turtle.go(result.duration*15).stroke();
 }
 
 function draw_path_automated(result){
     console.log(result);
-    if (result.command == "Auto Moving Forward")
-    {
-        turtle.angle(result.heading);
-        turtle.go(10).stroke();
+    if (eventtype == "Moving Forward" || eventtype == "Auto Moving Forward"){
+        turtle.set();
+        turtle.begin();
+        turtle.home();
+        turtle.pensize(3);
+        turtle.penstyle("#000");
+        turtle.angle(heading);
+        turtle.go(15*elapsedtime).stroke();
     }
-    
-    if (eventtype == "Fire Detected"){
+
+    else if (eventtype == "Fire Detected"){
         turtle.penup();
         turtle.angle(heading);
-        turtle.go(2);
+        turtle.go(5);
+        turtle.set();
+        turtle.begin();
+        turtle.home();
+        turtle.pensize(0);
         turtle.pendown();
-        turtle.penstyle("#ff9933");
+        turtle.fillstyle("#ff9933");
         turtle.turn(-90)
-        turtle.go(2.5).stroke();
-        var i = 1
-        while (i < 3){
+        turtle.go(5).fill();
+        var t = 1;
+        while (t < 3){
             turtle.turn(120);
-            turtle.go(5).stroke();
-            i = i + 1
+            turtle.go(10).fill();
+            t = t + 1
         }
         turtle.turn(120);
-        turtle.go(2.5).stroke();
+        turtle.go(5).fill();
         turtle.turn(-90);
         turtle.penup();
-        turtle.go(2);
-        turtle.pendown();
+        turtle.go(5);
         turtle.angle(heading);
-        turtle.penstyle("#000");    
+        turtle.pendown();  
     }
-    
-    if (eventtype == "Victim Found"){
+
+    else if (eventtype == "Victim Found"){
         turtle.penup();
         turtle.angle(heading);
-        turtle.go(2);
+        turtle.go(5);
+        turtle.set();
+        turtle.begin();
+        turtle.home();
+        turtle.pensize(0);
         turtle.pendown();
-        turtle.penstyle("#33cc33");
+        turtle.fillstyle("#33cc33");
         turtle.turn(-90)
-        turtle.go(2.5).stroke();
-        var i = 1
-        while (i < 4){
+        turtle.go(5).fill();
+        var t = 1
+        while (t < 4){
             turtle.turn(90);
-            turtle.go(5).stroke();
-            i = i + 1
+            turtle.go(10).fill();
+            t = t + 1
         }
         turtle.turn(90);
-        turtle.go(2.5).stroke();
+        turtle.go(5).fill();
         turtle.turn(-90);
         turtle.penup();
-        turtle.go(2);
-        turtle.pendown();
+        turtle.go(5);
         turtle.angle(heading);
-        turtle.penstyle("#000");
+        turtle.pendown();
     }
 }
 
