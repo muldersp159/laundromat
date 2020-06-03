@@ -36,11 +36,11 @@ function draw_path_automated(result){
         turtle.angle(heading);
         turtle.go(15*elapsedtime).stroke();
     }
-
+    
     else if (eventtype == "Fire Detected"){
         turtle.penup();
         turtle.angle(heading);
-        turtle.go(5);
+        turtle.go(8);
         turtle.set();
         turtle.begin();
         turtle.home();
@@ -63,11 +63,11 @@ function draw_path_automated(result){
         turtle.angle(heading);
         turtle.pendown();  
     }
-
+    
     else if (eventtype == "Victim Found"){
         turtle.penup();
         turtle.angle(heading);
-        turtle.go(5);
+        turtle.go(8);
         turtle.set();
         turtle.begin();
         turtle.home();
@@ -89,6 +89,32 @@ function draw_path_automated(result){
         turtle.go(5);
         turtle.angle(heading);
         turtle.pendown();
+    }
+    
+    else if (eventtype == "Junction Detected"){
+        turtle.penup();
+        turtle.angle(heading);
+        turtle.set();
+        turtle.begin();
+        turtle.home();
+        turtle.turn(180);
+        turtle.go(4);
+        turtle.pensize(0);
+        turtle.pendown();
+        turtle.fillstyle("#ff0000");
+        turtle.turn(90)
+        turtle.go(3).fill();
+        var t = 1
+        while (t < 4){
+            turtle.turn(90);
+            turtle.go(6).fill();
+            t = t + 1
+        }
+        turtle.turn(90);
+        turtle.go(3).fill();
+        turtle.turn(-90);
+        turtle.angle(heading);
+        console.log("ollah");
     }
 }
 
