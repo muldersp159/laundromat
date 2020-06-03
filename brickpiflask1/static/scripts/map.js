@@ -1,12 +1,7 @@
 var bCalibration = false;
 
 //create a new pen object attached to our canvas tag
-var turtle = new Pen("mycanvas");
-turtle.canvas.translate(0.5, 0.5);
-turtle.pensize(3);
-turtle.penstyle("#000");
-turtle.pendown();
-turtle.jump(240,320);
+
 
 function shutdownserver(){
     clearInterval(recurringhandle);
@@ -16,7 +11,13 @@ function shutdownserver(){
 }
 
 function go_through_events(results){
-    if (results != "no events"){
+    if (results.events != "no events"){
+        var turtle = new Pen("mycanvas");
+        turtle.canvas.translate(0.5, 0.5);
+        turtle.pensize(3);
+        turtle.penstyle("#000");
+        turtle.pendown();
+        turtle.jump(240,320);
         var i = 0;
         var h = 1;
         var e = 2;
@@ -25,6 +26,8 @@ function go_through_events(results){
             var elapsedtime = results.events[e];
             var heading = results.events[h];
             if (eventtype == "Moving Forward" || eventtype == "Auto Moving Forward"){
+                turtle.penstyle("#000")
+                console.log("balck pen for moving forward")
                 turtle.angle(heading);
                 turtle.go(10*elapsedtime).stroke();
             }
@@ -37,20 +40,21 @@ function go_through_events(results){
                 turtle.penstyle("#ff9933");
                 turtle.turn(-90)
                 turtle.go(2.5).stroke();
-                var i = 1
-                while (i < 3){
+                var t = 1;
+                while (t < 3){
                     turtle.turn(120);
                     turtle.go(5).stroke();
-                    i = i + 1
+                    t = t + 1
                 }
                 turtle.turn(120);
                 turtle.go(2.5).stroke();
                 turtle.turn(-90);
                 turtle.penup();
                 turtle.go(2);
-                turtle.pendown();
                 turtle.angle(heading);
-                turtle.penstyle("#000");    
+                turtle.penstyle("#000");
+                console.log("changing pen back to black")
+                turtle.pendown();  
             }
             
             if (eventtype == "Victim Found"){
@@ -61,20 +65,20 @@ function go_through_events(results){
                 turtle.penstyle("#33cc33");
                 turtle.turn(-90)
                 turtle.go(2.5).stroke();
-                var i = 1
-                while (i < 4){
+                var t = 1
+                while (t < 4){
                     turtle.turn(90);
                     turtle.go(5).stroke();
-                    i = i + 1
+                    t = t + 1
                 }
                 turtle.turn(90);
                 turtle.go(2.5).stroke();
                 turtle.turn(-90);
                 turtle.penup();
                 turtle.go(2);
-                turtle.pendown();
                 turtle.angle(heading);
                 turtle.penstyle("#000");
+                turtle.pendown();
             }
             var i = i + 3;
             var h = h + 3;
