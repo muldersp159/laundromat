@@ -2,14 +2,17 @@
 # You can also over-ride any functions that you do not like. The BrickPiInterface is code created by your teacher to make using the robot easier. It is composed of snippets of code from the DexterIndustries github 
 
 from interfaces.brickpiinterface import BrickPiInterface
-from interfaces.databaseinterface import DatabaseHelper 
+from interfaces.databaseinterface import DatabaseHelper
+from interfaces.soundinterface import SoundInterface
 import logging
+import time
 
 class Robot(BrickPiInterface):
     
     def __init__(self, timelimit=30, database=None):
         super().__init__(timelimit)
         self.database = database #database handle, use ViewQueryHelper, ModifyQueryHelper to run queries
+        self.sound = SoundInterface() #creating an object to play sound
         self.CurrentRoutine = 'ready' #could be useful to keep track of the current routine
         return
 

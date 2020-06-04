@@ -215,7 +215,9 @@ def forward():
     robot.CurrentCommand = "moving forward"
     heading = robot.get_orientation_IMU()
     duration = None
+    robot.sound.play_music()
     duration = robot.move_power_untildistanceto(RPOWER, LPOWER, 25)
+    robot.sound.pause()
     robot.CurrentCommand = "Moving Forward"
     saveevent(duration)
     robot.CurrentCommand = "stop"
@@ -227,6 +229,8 @@ def reverse():
     if not robot.Configured: #make sure robot is
         return jsonify({ "message":"robot not yet configured"})
     robot.CurrentCommand = "Reversed"
+    robot.sound.say("Turning around")
+    duration = None
     duration = robot.rotate_power_degrees_IMU(20, 180)
     saveevent(duration)
     robot.CurrentCommand = "stop"
@@ -238,6 +242,8 @@ def turnright():
     if not robot.Configured: #make sure robot is
         return jsonify({ "message":"robot not yet configured"})
     robot.CurrentCommand = "Turned Right"
+    robot.sound.say("Turning Right")
+    duration = None
     duration = robot.rotate_power_degrees_IMU(20, 90)
     saveevent(duration)
     robot.CurrentCommand = "stop"
@@ -249,6 +255,8 @@ def turnleft():
     if not robot.Configured: #make sure robot is
         return jsonify({ "message":"robot not yet configured"})
     robot.CurrentCommand = "Turned Left"
+    robot.sound.say("Turning Left")
+    duration = None
     duration = robot.rotate_power_degrees_IMU(20, -90)
     saveevent(duration)
     robot.CurrentCommand = 'stop'
@@ -260,6 +268,7 @@ def closeclaw():
     if not robot.Configured: #make sure robot is
         return jsonify({ "message":"robot not yet configured"})
     robot.CurrentCommand = "Closed Claw"
+    robot.sound.say("Closing Claw")
     duration = None
     while robot.CurrentCommand != "stop":
         duration = robot.close_claw()
@@ -273,6 +282,7 @@ def openclaw():
     if not robot.Configured: #make sure robot is
         return jsonify({ "message":"robot not yet configured"})
     robot.CurrentCommand = "Opened Claw"
+    robot.sound.say("Opening Claw")
     duration = None
     while robot.CurrentCommand != "stop":
         duration = robot.open_claw()
@@ -286,6 +296,7 @@ def movetojunction():
     if not robot.Configured: #make sure robot is configured
         return jsonify({ "message":"robot not yet configured"})
     robot.CurrentCommand = "Auto Moving Forward"
+    robot.sound.say("Help is on the way")
     duration = None
     duration = robot.move_power_untildistanceto(RPOWER, LPOWER, 20)
     saveevent(duration)
