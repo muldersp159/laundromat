@@ -27,6 +27,8 @@ function draw_path(result){
 
 function draw_path_automated(result){
     console.log(result);
+    var heading = result.heading;
+    var eventtype = result.command;
     if (eventtype == "Moving Forward" || eventtype == "Auto Moving Forward"){
         turtle.set();
         turtle.begin();
