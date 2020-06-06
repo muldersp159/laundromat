@@ -53,6 +53,7 @@ def index():
         userdetails = database.ViewQueryHelper("SELECT * FROM UserTbl WHERE Email=? AND Password=?",(email,password))
         if len(userdetails) != 0:
             #saving info to session for login validation on other pages
+            row = userdetails[0]
             session['userid'] = row['UserID'] 
             session['username'] = row['FullName']
             return redirect('./missioncontrol')
@@ -110,7 +111,8 @@ def locationform():
             session['locationid'] = row['LocationID']
             startfire()
             return redirect('/missioncontrol')
-    else return redirect('/missioncontrol')
+    else: 
+        return redirect('/missioncontrol')
 
 @app.route('/pastlocation', methods=['GET','POST'])
 def pastlocation():
@@ -474,7 +476,7 @@ def navigateintersection(collisiontype):
                             saveevent(duration)
                             movetojunction()
                         else:
-                            obot.rotate_power_degrees_IMU(20, -90)
+                            robot.rotate_power_degrees_IMU(20, -90)
                             elapsedtime = time.time() - starttime
                             saveevent(elapsedtime)
                             robot.CurrentCommand = "Reversed"

@@ -9,14 +9,14 @@ from di_sensors.inertial_measurement_unit import InertialMeasurementUnit
 from di_sensors.temp_hum_press import TempHumPress
 #DO I NEED TO USE MUTEX???
 
-#this needs to go inside the class at somepoint, im trying to avoid confusing students
 NOREADING = 999 #just using 999 to represent no reading
 MAGNETIC_DECLINATION = 11 #i believe this is correct for Brisbane
 USEMUTEX = True #avoid threading issues using the IMU sensorm might need to use this for thermal sensor
 ENABLED = 1
 DISABLED = 5 #if the sensor returns NOREADING more than 5 times in a row, its permanently disabled
 
-#Created a Class to wrap the robot functionality, one of the features is the idea of keeping track of the CurrentCommand, this is important when more than one process is running...
+#Created a Class to wrap the robot functionality
+#great because it keeps track of the current command - important
 class BrickPiInterface():
 
     #Initialise log and timelimit
@@ -85,7 +85,7 @@ class BrickPiInterface():
             self.config['imu'] = DISABLED   
         
         bp.set_motor_limits(self.mediummotor, 100, 600) #set power / speed limit 
-        self.Configured = True #there is a 4 second delay - before robot is configured
+        self.Configured = True #there is a 4.5 second delay - before robot is configured
         return
 
     #-- Start Infrared I2c Thread ---------#
@@ -382,18 +382,15 @@ class BrickPiInterface():
             if ((self.config['ultra'] > DISABLED) or (distancedetected < distanceto and distancedetected != 0.0)): 
                 collisiontype = "objectdetected"
                 break 
-
-            ##insert other tests e.g if red colour
+            #test if red colour detected
             colour = self.get_colour_sensor()
             if colour == "Red":
                 collisiontype = "junctiondetected"
                 break
-            elif colour == "Yellow":
-                collisiontype = "searchareadetected"
-                break
         elapsedtime = time.time() - starttime
         bp.set_motor_power(self.largemotors, 0)
         return (elapsedtime)
+        #elapsed time used in data storage and map drawing
 
     #Rotate power and time, -power to reverse
     def rotate_power_time(self, power, t):
