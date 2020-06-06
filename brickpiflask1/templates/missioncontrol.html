@@ -10,14 +10,18 @@
     td {
       width: 33%;
       padding: 5px;
+      /*making sure colums are same width */
     }
 </style>
+
 
 
             
 <h3>Voltage = {{voltage}}</h3>
 <div class="container">
     {% if 'locationid' not in session %}
+        <!-- only lets user select location if they havent already -->
+        <!-- if user has selected location, location forms are hidden -->
         <form action="/pastlocation" method="POST">
             <div class="form-group">
                 <label for="exampleInputEmail1">Subject</label>
@@ -25,9 +29,11 @@
                     {% if locations != "No Past Locations" %}
                         {% for location in locations %}
                             <option value={{location['id']}}>{{location['location']}}</option>
+                            <!-- creating a select option for each past location -->
                         {% endfor %}
                     {% else %}
                         <option value={{locations}}>{{locations}}</option>
+                        <!-- if no locations, then the value is "no locations" -->
                     {% endif %}
                 </select>
             </div>
@@ -53,6 +59,8 @@
                             <option value="SA">SA</option>
                             <option value="TAS">TAS</option>
                             <option value="WA">WA</option>
+                            <!-- limiting the errors from user in locaiton -->
+                            <!-- asuming only using in Aus -->
                         </select>
                     </div>
                     <div class="form-group">
@@ -71,9 +79,11 @@
                 </form>
             {% else %}
                 <div class = "form-group"><button type="button" class="btn btn-danger" onclick="JSONrequest('/endfire','GET')">Stop Recording Fire</button><div>
-                <br><img src="{{ url_for('video_feed')}}" width=100%><br>
+                <!-- stops recording fire -->
+                    <br><img src="{{ url_for('video_feed')}}" width=100%><br> <!-- live feed -->
             {% endif %}
             <br>
+            <!-- controls for the robot in a grid layout -->
             <table>
                 <tr>
                     <td><button type="button" class="btn btn-dark" onclick="JSONrequest('/closeclaw','POST')">Close Claw</button></td>

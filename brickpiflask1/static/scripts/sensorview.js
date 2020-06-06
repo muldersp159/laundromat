@@ -14,7 +14,7 @@ function start_calibration() {
 function reconfigIMU() {
     bCalibration = true;
     clearInterval(recurringhandle);
-    document.getElementById('message').innerHTML = "<span class='blinking'>Reconfigure IMU</span>";
+    document.getElementById('message').innerHTML = "<span class='blinking'>Reconfiguring IMU</span>";
     JSONrequest('/reconfigIMU','POST', get_reconfigure_status); //send callibration request
 }
 

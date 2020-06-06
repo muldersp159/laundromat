@@ -16,6 +16,8 @@
 
         tr:nth-child(even){
             background-color: #f2f2f2;
+            /* every other table row is a different colour */
+            /* makes it easier to read */
         }
 
         th {
@@ -34,20 +36,26 @@
                         {% if fires != "No Past Fires" %}
                             {% for fire in fires %}
                                 <option value={{fire['id']}}>{{fire['details']}}</option>
+                                <!-- only creates dropd-down if fires returned -->
                             {% endfor %}
                         {% else %}
                             <option value={{fires}}>{{fires}}</option>
+                            <!-- shows "No Past Fires" -->
                         {% endif %}
                     </select>
                 </div>
             <input class="btn btn-info" type="submit" value="See Data From This Fire">
         </form><br>
-        {% if 'reviewedfire' in session and events != "no events" %}
+        {% if 'reviewedfire' in session %}
+            <!-- only displays fire data if a fire was selected -->
             <p>
                 During this fire, the robot was being opperated by {{details['FullName']}}.<br>
                 This fire took place at {{details['Number']}} {{details['Street']}}, {{details['Suburb']}}, {{details['State']}}.
                 This fire occured on {{details['StartTime'].split()[0]}} at {{details['StartTime'].split()[1]}}.
+                <!-- general fire info -->
             </p><br>
+            {% if events != "no events" %}
+            <!-- only shows past events if events were returned -->
             <canvas id="mycanvas" style="border:1px solid black"; height=480 width=640></canvas>
             <table id="events">
                 <tr>
@@ -56,6 +64,7 @@
                     <th>Temp</th>
                     <th>Heading</th>
                 </tr>
+                <!-- showing all events form that fire -->
                 {% for event in events %}
                     <tr>
                         <td>{{event['EventType']}}</td>
@@ -65,14 +74,11 @@
                     </tr>
                 {% endfor %}
             </table>
-        {% elif events == "no events" %}
-            <p>
-                During this fire, the robot was being opperated by {{username}}.<br>
-                This fire took place at {{details['Number']}} {{details['Street']}}, {{details['Suburb']}}, {{details['State']}}.<br>
-                This fire occured on {{details['StartTime'].split()[0]}} at {{details['StartTIme'].split()[1]}}.
-            </p>
-                Sorry. There are no events saved for this fire.
-            <p>
+            {% elif events == "no events" %}
+                <p>
+                    Sorry. There are no events saved for this fire.
+                <p>
+            {% endif %}
         {% endif %}
     </div>
 {% endblock %}

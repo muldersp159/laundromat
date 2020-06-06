@@ -1,8 +1,5 @@
 var bCalibration = false;
 
-//create a new pen object attached to our canvas tag
-
-
 function shutdownserver(){
     clearInterval(recurringhandle);
     setTimeout(() => { console.log("Shutting down"); }, 1000);
@@ -18,9 +15,13 @@ function go_through_events(results){
         turtle.penstyle("#000");
         turtle.pendown();
         turtle.jump(240,320);
+        //creating the turtle that will draw the past path
+        //only do it in this function because otherwise 
+        //trying to get canvas which wont exist yet
         var i = 0;
         var h = 1;
         var e = 2;
+        //use these to select list items
         while (i < results.events.length) {
             var eventtype = results.events[i];
             var elapsedtime = results.events[e];
@@ -31,14 +32,19 @@ function go_through_events(results){
                 turtle.home();
                 turtle.pensize(3);
                 turtle.penstyle("#000");
+                //have to create a new line for each stroke 
+                //to have different colour parts
                 turtle.angle(heading);
                 turtle.go(15*elapsedtime).stroke();
             }
             
             else if (eventtype == "Fire Detected"){
+                //draws orange triangle
                 turtle.penup();
                 turtle.angle(heading);
                 turtle.go(8);
+                //moving in front of the current 
+                //line a bit so no overlap
                 turtle.set();
                 turtle.begin();
                 turtle.home();
@@ -63,6 +69,7 @@ function go_through_events(results){
             }
             
             else if (eventtype == "Victim Found"){
+                //draws green box
                 turtle.penup();
                 turtle.angle(heading);
                 turtle.go(8);
@@ -90,6 +97,7 @@ function go_through_events(results){
             }
             
             else if (eventtype == "Junction Detected"){
+                //draws small red box
                 turtle.penup();
                 turtle.angle(heading);
                 turtle.set();
@@ -112,7 +120,6 @@ function go_through_events(results){
                 turtle.go(3).fill();
                 turtle.turn(-90);
                 turtle.angle(heading);
-                console.log("ollah");
             }
             var i = i + 3;
             var h = h + 3;
@@ -122,4 +129,5 @@ function go_through_events(results){
 }
 
 JSONrequest('/getevents','POST', go_through_events);
+//passes all events into the go_through_events function
 
