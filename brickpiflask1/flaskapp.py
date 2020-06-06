@@ -7,6 +7,8 @@ import datetime
 from time import sleep
 from camera_pi import Camera #a picam extension
 
+#testing testing 123
+
 database = DatabaseHelper('Fire Robot.sqlite')#Create the database
 #Create Robot first. It take 4 seconds to initialise the robot, sensor view wont work until robot is created...
 robot = yourrobot.Robot()
