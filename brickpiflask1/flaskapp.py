@@ -4,19 +4,10 @@ import time, sys, json
 import yourrobot #import in your own robot functionality
 from interfaces.databaseinterface import DatabaseHelper
 import datetime
-from picamera import PiCamera
 from time import sleep
-from camera_pi import Camera
+from camera_pi import Camera #a picam extension
 
-
-'''camera = PiCamera()
-camera.start_preview(alpha=192)
-sleep(1)
-camera.capture("/home/pi/Desktop/brickpiflask/brickpiflask1/pic.jpg")
-camera.stop_preview()'''
-
-#Create the database
-database = DatabaseHelper('Fire Robot.sqlite')
+database = DatabaseHelper('Fire Robot.sqlite')#Create the database
 #Create Robot first. It take 4 seconds to initialise the robot, sensor view wont work until robot is created...
 robot = yourrobot.Robot()
 if robot.get_battery() < 6: #the robot motors will disable at 6 volts
@@ -49,7 +40,7 @@ def video_feed():
     return Response(gen(Camera()),
                     mimetype='multipart/x-mixed-replace; boundary=frame')
 
-@app.route('/', methods=['GET','POST'])
+@app.route('/', methods=['GET','POST']) #login page
 def index():
     session['VictimFound'] = False
     session['DetectingIntersections'] = True
@@ -60,9 +51,9 @@ def index():
         password = request.form['password']
         # TODO - need to make sure only one user is able to login at a time...
         userdetails = database.ViewQueryHelper("SELECT * FROM UserTbl WHERE Email=? AND Password=?",(email,password))
-        if len(userdetails) != 0:  #rows have been found
-            row = userdetails[0] #userdetails is a list of dictionaries
-            session['userid'] = row['UserID']
+        if len(userdetails) != 0:
+            #saving info to session for login validation on other pages
+            session['userid'] = row['UserID'] 
             session['username'] = row['FullName']
             return redirect('./missioncontrol')
         else:
@@ -73,6 +64,7 @@ def index():
 
 @app.route('/endfire', methods=['GET','POST'])
 def endfire():
+    #updating the current fire in the session to being complete
     database.ModifyQueryHelper('UPDATE FireTbl SET Complete=? WHERE FireID=?',("True",int(session['fireid'])))
     userid = session['userid']
     session.clear()
@@ -80,14 +72,8 @@ def endfire():
     session['FoundVictim'] = False
     return redirect('/missioncontrol')
 
-def saveevent(elapsedtime):
-    if 'locationid' in session and 'fireid' in session:
-        heading = robot.get_orientation_IMU()[0]
-        temp = robot.get_thermal_sensor()
-        database.ModifyQueryHelper('INSERT INTO EventsTbl (FireID, EventType, Temp, ElapsedTime, Heading) VALUES (?,?,?,?,?)',(int(session['fireid']),str(robot.CurrentCommand),float(temp),float(elapsedtime),float(heading)))
-    return
-
 def startfire():
+    #creating a new fire at the locaiton passed in
     starttime = datetime.datetime.now()
     starttime = str(starttime)[:19]
     database.ModifyQueryHelper('INSERT INTO FireTbl (LocationID, UserID, StartTime) VALUES (?,?,?)',(session['locationid'],session['userid'],starttime))
@@ -95,14 +81,25 @@ def startfire():
     row = firedetails[0]
     session['fireid'] = row['FireID']
 
+def saveevent(elapsedtime):
+    #only saving data if location selected
+    if 'locationid' in session and 'fireid' in session:
+        heading = robot.get_orientation_IMU()[0]
+        temp = robot.get_thermal_sensor()
+        database.ModifyQueryHelper('INSERT INTO EventsTbl (FireID, EventType, Temp, ElapsedTime, Heading) VALUES (?,?,?,?,?)',(int(session['fireid']),str(robot.CurrentCommand),float(temp),float(elapsedtime),float(heading)))
+        #saving current command info into db
+        #rather than having a save for each function, just have the one
+    return
+
 @app.route('/locationform', methods=['GET','POST'])
 def locationform():
     state = request.form['state']
     suburb = request.form['suburb']
     street = request.form['street']
     number = request.form['number']
-    
+    #validate that no fields are empty
     if state != "" and suburb != "" and street != "" and number != "":
+        #checking not creating a location that already exists
         locationidreturn = database.ViewQueryHelper("SELECT LocationID FROM LocationTbl WHERE Number=? AND Street=? AND Suburb=? AND State=?",(number,street,suburb,state))
         if len(locationidreturn) != 0:
             return redirect('/missioncontrol')
@@ -113,9 +110,11 @@ def locationform():
             session['locationid'] = row['LocationID']
             startfire()
             return redirect('/missioncontrol')
+    else return redirect('/missioncontrol')
 
 @app.route('/pastlocation', methods=['GET','POST'])
 def pastlocation():
+    #where user has selected a previous location
     location = request.form.get('pastlocation')
     if location != "No Past Locations": 
         session['locationid'] = location
@@ -128,10 +127,12 @@ def pastlocation():
 @app.route('/missioncontrol')
 def missioncontrol():
     if 'userid' not in session:
-        return redirect('./') #no form data is carried across using 'dot/'
+        return redirect('./') #no form data is carried across using './'
     locationdetails = database.ViewQueryHelper("SELECT LocationID, State, Suburb, Street, Number FROM LocationTbl")
     locations = []
+    #getting all past llocations for drop-down
     if len(locationdetails) != 0:
+        #only creates the dropdown if there are past locations
         for location in locationdetails:
             locations.append({"location":str(location['Number']) + " " + str(location['Street']) + " " +  str(location['Suburb']) + " " + str(location['State']),"id":location['LocationID']})
     else:
@@ -141,7 +142,7 @@ def missioncontrol():
 #dashboard
 @app.route('/sensorview', methods=['GET','POST'])
 def sensorview():
-    if not robot.Configured: #make sure robot is funcitoning
+    if not robot.Configured: #make sure robot is functioning
         return redirect('./')
     if 'userid' not in session:
         return redirect('./')
@@ -151,14 +152,15 @@ def sensorview():
 @app.route('/getallstats', methods=['GET','POST'])
 def getallstats():
     if 'userid' not in session:
-        return redirect('./') #no form data is carried across using 'dot/'
+        return redirect('./')
     robot.CurrentCommand = "getting all stats"
     results = robot.get_all_sensors()
-    return jsonify(results)
+    return jsonify(results) #passing sensor values to page
 
 @app.route('/getevents', methods=['GET','POST'])
 def getevents():
-    events = "no events"
+    #called from webpage when it loads up
+    events = "no events" #placeholder in case reviewed fire not in session
     if "reviewedfire" in session:
         returnedevents = database.ViewQueryHelper("SELECT EventType, ElapsedTime, Temp, Heading FROM EventsTbl WHERE FireID = ? ORDER BY EventID ASC", (session['reviewedfire'],))
         if len(returnedevents) == 0:
@@ -166,6 +168,7 @@ def getevents():
         else:
             events = []
             for event in returnedevents:
+                #used for drawing past paths
                 events.append(event['EventType'])
                 events.append(event['Heading'])
                 events.append(event['ElapsedTime'])
@@ -173,26 +176,27 @@ def getevents():
 
 @app.route('/reviewedfireform', methods=['GET','POST'])
 def reviewedlocationform():
+    #putting the past fire user selected into session
     session['reviewedfire'] = request.form['reviewedfire']
     return redirect('/pastfires')
 
 #map or table of fire and path data
 @app.route('/pastfires')
 def pastfires():
-    if not robot.Configured: #make sure robot is
+    if not robot.Configured: #make sure robot is configured
         return redirect('./')
     if 'userid' not in session:
         return redirect('./') #no form data is carried across using 'dot/'
-    events = []
-    reviewedlocationdetails = []
-    reviewedfirestart = []
+    events = [] #what events the robot went through
+    reviewedlocationdetails = [] #where and when fire happened
     username = ""
     if 'reviewedfire' in session:
         events = database.ViewQueryHelper("SELECT EventType, ElapsedTime, Temp, Heading FROM EventsTbl WHERE FireID = ? ORDER BY EventID ASC", (session['reviewedfire'],))
         reviewedlocationdetailsreturned = database.ViewQueryHelper("SELECT LocationTbl.State, LocationTbl.Suburb, LocationTbl.Street, LocationTbl.Number, UserTbl.FullName, FireTbl.StartTime FROM LocationTbl, FireTbl, UserTbl WHERE FireTbl.LocationID = LocationTbl.LocationID AND FireTbl.FireID=? AND FireTbl.UserID = UserTBl.UserID;",(session['reviewedfire'],))
-        reviewedlocationdetails = reviewedlocationdetailsreturned[0]
+        reviewedlocationdetails = reviewedlocationdetailsreturned[0]#selecting the dictionary returned to save having to do this step in js
         if len(events) == 0:
             events = "no events"
+    #getting all past fires for user to select
     firedetails = database.ViewQueryHelper("SELECT FireID, LocationID, StartTime FROM FireTbl WHERE Complete = ?",("True",))
     fires = []
     if len(firedetails) != 0:
@@ -205,6 +209,7 @@ def pastfires():
             fires.append({"details":str(location['Number']) + " " + str(location['Street']) + " " +  str(location['Suburb']) + " " + str(location['State']) + " on " + str(date) + " at " + str(time),"id":fire['FireID']})
     else:
         locations = "No Past Fires"
+        #drop-down wont be created if no past fires
     return render_template('map.html', fires = fires, configured = robot.Configured, session = session, events = events, details = reviewedlocationdetails)
 
 #start robot moving
@@ -213,15 +218,15 @@ def forward():
     if not robot.Configured: #make sure robot is
         return jsonify({ "message":"robot not yet configured"})
     robot.CurrentCommand = "moving forward"
-    heading = robot.get_orientation_IMU()
-    duration = None
+    heading = robot.get_orientation_IMU()[0]
+    duration = None #placeholder in case nothing returned
     robot.sound.play_music()
     duration = robot.move_power_untildistanceto(RPOWER, LPOWER, 25)
     robot.sound.pause()
     robot.CurrentCommand = "Moving Forward"
-    saveevent(duration)
-    robot.CurrentCommand = "stop"
-    return jsonify({ "message":"moving forward", "duration":duration, "heading":heading[0]}) #jsonify take any type and makes a JSON
+    saveevent(duration) #saving the event the robot executed
+    robot.CurrentCommand = "stop" #signifying robot has stopped
+    return jsonify({ "message":"moving forward", "duration":duration, "heading":heading}) #jsonify take any type and makes a JSON
     
 #start robot moving backwards
 @app.route('/reverse', methods=['GET','POST'])
@@ -306,26 +311,34 @@ def movetojunction():
     return 
 
 def identifyjunction():
+    #working out why the robot has stopped
+    #fire, wall, junction, victim?
+    #robot has different actions for each
     robot.CurrentCommand = "Identifying Junction"
     if robot.CurrentCommand != "stop":
         distancemeasured = robot.get_ultra_sensor()
         if distancemeasured > 20 and distancemeasured != 0.0:
+            #no object in front of object
             duration = 0
             robot.CurrentCommand = "Junction Detected"
             saveevent(duration)
             if session['DetectingIntersections'] == True:
                 log("entering junction")
                 robot.move_power_time(RPOWER, LPOWER, 1.9)
-                log("moved off red tape (entering)")
+                #log("moved off red tape (entering)")
+                #making sure detected red tape
                 session['DetectingIntersections'] = False
                 navigateintersection("intersection")
+                #told the navigation function what intersection at
             elif session['DetectingIntersections'] == False:
                 log("exiting junciton")
-                robot.move_power_time(RPOWER, LPOWER, 0.5) #to get of the red tape when you know that you are exiting a junction
-                log("moved off red tape (exiting)")
+                robot.move_power_time(RPOWER, LPOWER, 0.5)
+                #to get off red tape when exiting junction
+                #log("moved off red tape (exiting)")
                 session['DetectingIntersections'] = True
                 movetojunction()
-        else:   
+        else:
+            #object in front
             tempmeasured = robot.get_thermal_sensor()
             if tempmeasured > 40:
                 duration = 0
@@ -341,6 +354,7 @@ def identifyjunction():
                 session['VictimFound'] = True
                 collectvictim()
             else:
+                #not fire, not vic, therefor wall
                 duration = 0
                 robot.CurrentComman = "Wall Detected"
                 saveevent(duration)
@@ -354,6 +368,7 @@ def collectvictim():
         duration += robot.close_claw()
         robot.CurrentCommand = 'stop'
     duration += robot.rotate_power_degrees_IMU(20, 180)
+    #turning robot around to go back way came
     saveevent(duration)
     movetojunction()
 
@@ -361,19 +376,20 @@ def navigateintersection(collisiontype):
     robot.CurrentCommand = "Navigating Intersection"
     starttime = time.time()
     if session['VictimFound'] == False:
+        #robot hasn't found victim yet
+        #hug left wall
         robot.rotate_power_degrees_IMU(20, -90)
         log("check left")
         if robot.CurrentCommand != "stop":
-            distancemeasured = robot.get_ultra_sensor() #reading ultrasonic to see if there is a wall infront
+            distancemeasured = robot.get_ultra_sensor()
+            #reading ultrasonic to see if there is a wall infront
             if distancemeasured >= 30 and distancemeasured != 0.0:
                 elapsedtime = time.time() - starttime
                 saveevent(elapsedtime)
                 robot.CurrentCommand = "Turned Left"
                 duration = 0
                 saveevent(duration)
-                log("moved forward after turning left" + str(distancemeasured))
-                movetojunction()
-                #turned left
+                movetojunction() #start moving forward again
             else:
                 if collisiontype == "intersection":
                     robot.rotate_power_degrees_IMU(20, 90)
@@ -385,13 +401,10 @@ def navigateintersection(collisiontype):
                         robot.CurrentCommand = "Went Straight"
                         duration = 0
                         saveevent(duration)
-                        log("went forward after turning right" + str(distancemeasured))
                         movetojunction()
-                        #went straight
                     else:
                         duration = robot.rotate_power_degrees_IMU(20, 90)
                         distancemeasured = robot.get_ultra_sensor()
-                        log("check right" + str(distancemeasured))
                         if distancemeasured >= 30 and distancemeasured != 0.0:
                             elapsedtime = time.time() - starttime
                             saveevent(elapsedtime)
@@ -399,21 +412,18 @@ def navigateintersection(collisiontype):
                             duration = 0
                             saveevent(duration)
                             movetojunction()
-                            #turned right
                         else:
                             robot.rotate_power_degrees_IMU(20, 90)
-                            log("go back")
                             elapsedtime = time.time() - starttime
                             saveevent(elapsedtime)
                             robot.CurrentCommand = "Reversed"
                             duration = 0
                             saveevent(duration)
                             movetojunction()
-                            #reversed
                 elif collisiontype == "wall" or collisiontype == "fire":
+                    #treat the fire as if its a wall, but save fire detected
                     robot.rotate_power_degrees_IMU(20, 180)
                     distancemeasured = robot.get_ultra_sensor()
-                    log("check right" + str(distancemeasured))
                     if distancemeasured >= 30 and distancemeasured != 0.0:
                         elapsedtime = time.time() - starttime
                         saveevent(elapsedtime)
@@ -421,18 +431,17 @@ def navigateintersection(collisiontype):
                         duration = 0
                         saveevent(duration)
                         movetojunction()
-                        #turned right
                     else:
                         robot.rotate_power_degrees_IMU(20, 90)
-                        log("go back" + str(distancemeasured))
                         elapsedtime = time.time() - starttime
                         saveevent(elapsedtime)
                         robot.CurrentCommand = "Reversed"
                         duration = 0
                         saveevent(duration)
                         movetojunction()
-                        #reversed
     elif session['VictimFound'] == True:
+        #robot has collected the victim
+        #hug the right wall back
         duration = robot.rotate_power_degrees_IMU(20, 90)
         if robot.CurrentCommand != "stop":
             distancemeasured = robot.get_ultra_sensor() #reading ultrasonic to see if there is a wall infront
@@ -443,7 +452,6 @@ def navigateintersection(collisiontype):
                 duration = 0
                 saveevent(duration)
                 movetojunction()
-                #turned left
             else:
                 if collisiontype == "intersection":
                     duration = robot.rotate_power_degrees_IMU(20, -90)
@@ -455,7 +463,6 @@ def navigateintersection(collisiontype):
                         duration = 0
                         saveevent(duration)
                         movetojunction()
-                        #went straight
                     else:
                         duration = robot.rotate_power_degrees_IMU(20, -90)
                         distancemeasured = robot.get_ultra_sensor()
@@ -474,7 +481,6 @@ def navigateintersection(collisiontype):
                             duration = 0
                             saveevent(duration)
                             movetojunction()
-                            #reversed
                 elif collisiontype == "wall" or collisiontype == "fire":
                     duration = robot.rotate_power_degrees_IMU(20, 180)
                     distancemeasured = robot.get_ultra_sensor()
@@ -485,7 +491,6 @@ def navigateintersection(collisiontype):
                         duration = 0
                         saveevent(duration)
                         movetojunction()
-                        #turned right
                     else:
                         robot.rotate_power_degrees_IMU(20, -90)
                         elapsedtime = time.time() - starttime
@@ -494,39 +499,15 @@ def navigateintersection(collisiontype):
                         duration = 0
                         saveevent(duration)
                         movetojunction()
-                        #reversed
     return jsonify({ "message":"Navigating Intersection"})
 
-'''def navigatewall():
-    robot.CurrentCommand = "navigating wall"
-    robot.CurrentCommand = "Turned Left"
-    duration = robot.rotate_power_degrees_IMU(20, -90)
-    if robot.CurrentCommand != "stop":
-        distancemeasured = robot.get_ultra_sensor() #reading ultrasonic to see if there is a wall infront
-        if distancemeasured < 40 and distancemeasured != 0:
-            robot.CurrentCommand = "Reversed"
-            duration = robot.rotate_power_degrees_IMU(20, 180)
-            distancemeasured = robot.get_ultra_sensor()
-            if distancemeasured < 40 and distancemeasured != 0:
-                robot.CurrentCommand = "Turned Right"
-                duration = robot.rotate_power_degrees_IMU(20, 90)
-                movetojunction()
-                #reversed
-            else:
-                movetojunction()
-                #went right
-        else:
-            movetojunction()
-            #turned left
-    return jsonify({ "message":"navigating path obstruction"})'''
-
-#creates a route to get all the event data
+#creates a route to get all the user data
 @app.route('/getallusers', methods=['GET','POST'])
 def getallusers():
     results = database.ViewQueryHelper("SELECT * FROM users")
     return jsonify([dict(row) for row in results]) #jsonify doesnt work with an SQLite.Row
 
-#Get the current command from brickpiinterface.py
+#Get the robot's current command
 @app.route('/getcurrentcommand', methods=['GET','POST'])
 def getcurrentcommand():
     return jsonify({"currentcommand":robot.CurrentCommand})
@@ -552,7 +533,7 @@ def getcurrentroutine():
 def getconfigured():
     return jsonify({"configured":robot.Configured})
 
-#Start callibration of the IMU sensor
+#See if IMU calibrated
 @app.route('/getcalibration', methods=['GET','POST'])
 def getcalibration():
     calibration = "Not Calibrated"
@@ -575,10 +556,17 @@ def stop():
 #Shutdown the web server
 @app.route('/shutdown', methods=['GET','POST'])
 def shutdown():
+    if 'fireid' in session:
+        endfire()
+        #ending the current fire running
     session.clear()
+    #clearing all info in session
+    #(ie. user details, fire details, etc.)
     robot.safe_exit()
+    #shuts down the robot's sensors and motors
     func = request.environ.get('werkzeug.server.shutdown')
     func()
+    #closing the port
     return jsonify({ "message":"shutting down" })
 
 #Log a message
@@ -589,5 +577,7 @@ def log(message):
 #---------------------------------------------------------------
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True, threaded=True)
-
-#Threaded mode is important if using shared resources e.g. sensor, each user request launches a thread.. However, with Threaded Mode on errors can occur if resources are not locked down e.g trying to access live readings - conflicts can occur due to processor lock. Use carefully..
+#Threaded mode is important if using shared resources e.g. sensor
+#each user request launches a thread.
+#However, with Threaded Mode on, errors can occur if resources are not locked down
+#e.g trying to access live readings - conflicts can occur due to processor lock. Use carefully..
