@@ -57,7 +57,7 @@ function go_through_events(results){
                 while (t < 3){
                     turtle.turn(120);
                     turtle.go(10).fill();
-                    t = t + 1
+                    t = t + 1;
                 }
                 turtle.turn(120);
                 turtle.go(5).fill();
@@ -81,11 +81,11 @@ function go_through_events(results){
                 turtle.fillstyle("#33cc33");
                 turtle.turn(-90)
                 turtle.go(5).fill();
-                var t = 1
+                var t = 1;
                 while (t < 4){
                     turtle.turn(90);
                     turtle.go(10).fill();
-                    t = t + 1
+                    t = t + 1;
                 }
                 turtle.turn(90);
                 turtle.go(5).fill();
@@ -110,11 +110,11 @@ function go_through_events(results){
                 turtle.fillstyle("#ff0000");
                 turtle.turn(90)
                 turtle.go(3).fill();
-                var t = 1
+                var t = 1;
                 while (t < 4){
                     turtle.turn(90);
                     turtle.go(6).fill();
-                    t = t + 1
+                    t = t + 1;
                 }
                 turtle.turn(90);
                 turtle.go(3).fill();
