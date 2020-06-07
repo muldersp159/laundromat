@@ -226,7 +226,7 @@ def forward():
     duration = None #placeholder in case nothing returned
     robot.sound.play_music()
     duration = robot.move_power_untildistanceto(RPOWER, LPOWER, 25)
-    robot.sound.pause()
+    robot.sound.pause_music()
     robot.CurrentCommand = "Moving Forward"
     saveevent(duration) #saving the event the robot executed
     robot.CurrentCommand = "stop" #signifying robot has stopped
@@ -304,10 +304,14 @@ def openclaw():
 def movetojunction():
     if not robot.Configured: #make sure robot is configured
         return jsonify({ "message":"robot not yet configured"})
+    robot.sound.say(robot.CurrentCommand)
+    #rather than putting in a say statement after each test in nav junction
+    #just put it here so that only one code of line has to be written
     robot.CurrentCommand = "Auto Moving Forward"
-    robot.sound.say("Help is on the way")
+    robot.sound.play_music()
     duration = None
     duration = robot.move_power_untildistanceto(RPOWER, LPOWER, 20)
+    robot.sound.pause_music()
     saveevent(duration)
     jsonify({ "message":"Auto Moving Forward", "duration":duration }) #jsonify take any type and makes a JSON
     if robot.CurrentCommand != "stop":
