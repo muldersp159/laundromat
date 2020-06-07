@@ -55,13 +55,13 @@ function draw_path_automated(result){
         turtle.pensize(0);
         turtle.pendown();
         turtle.fillstyle("#ff9933");
-        turtle.turn(-90)
+        turtle.turn(-90);
         turtle.go(5).fill();
         var t = 1;
         while (t < 3){
             turtle.turn(120);
             turtle.go(10).fill();
-            t = t + 1
+            t = t + 1;
         }
         turtle.turn(120);
         turtle.go(5).fill();
@@ -128,7 +128,7 @@ function draw_path_automated(result){
 }
 
 function command_test(result) {
-    if (result.currentcommand == "Auto Moving Forward")
+    if (result.currentcommand == "Auto Moving Forward" || result.currentcommand == "Fire Detected" || result.currentcommand == "Victim Found" || result.currentcommand == "Junction Detected")
     //making sure the robot is moving forward before gets IMU
     //if robot is turning and read IMU, the IMU overloads
     {
