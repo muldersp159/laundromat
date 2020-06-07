@@ -376,20 +376,25 @@ class BrickPiInterface():
         bp.set_motor_power(bp.PORT_A, Rpower)
         bp.set_motor_power(bp.PORT_B, Lpower)
         while (self.CurrentCommand != "stop"):
-            ##if sensor fails, or distanceto has been reached quit, or distancedetected = 0
+            #if sensor fails, or distanceto has been reached quit, or distancedetected = 0
             distancedetected = self.get_ultra_sensor()
-            #self.log("MOVING - Distance detected: " + str(distancedetected))
-            if ((self.config['ultra'] > DISABLED) or (distancedetected < distanceto and distancedetected != 0.0)): 
-                collisiontype = "objectdetected"
-                break 
-            #test if red colour detected
             colour = self.get_colour_sensor()
-            if colour == "Red":
-                collisiontype = "junctiondetected"
-                break
+            if ((self.config['ultra'] > DISABLED) or (distancedetected < distanceto and distancedetected != 0.0) or colour == "Red"): 
+                break 
+        #testing what caused robot to stop
+        #doing this now rather than multiple times in Flaskapp
+        if colour == "Red":
+            collisiontype = "Junction Detected"
+        tempmeasured = self.get_thermal_sensor()
+        elif tempmeasured > 40:
+            collisiontype = "Fire Detected"
+        elif tempmeasured < 10:        #using an icepack or cold can of soft drint for victim
+            collisiontype = "Victim Found"
+        elif tempmeasured < 40 and tempmeasured > 10:         #not fire, not vic, therefor wall
+            collisiontype = "Wall Detected"
         elapsedtime = time.time() - starttime
         bp.set_motor_power(self.largemotors, 0)
-        return (elapsedtime)
+        return (elapsedtime, collisiontype)
         #elapsed time used in data storage and map drawing
 
     #Rotate power and time, -power to reverse

@@ -225,10 +225,12 @@ def forward():
     heading = robot.get_orientation_IMU()[0]
     duration = None #placeholder in case nothing returned
     robot.sound.play_music()
-    duration = robot.move_power_untildistanceto(RPOWER, LPOWER, 25)
+    duration, collision = robot.move_power_untildistanceto(RPOWER, LPOWER, 20)
     robot.sound.pause_music()
     robot.CurrentCommand = "Moving Forward"
     saveevent(duration) #saving the event the robot executed
+    robot.CurrentCommand = collision
+    saveevent(0)
     robot.CurrentCommand = "stop" #signifying robot has stopped
     return jsonify({ "message":"moving forward", "duration":duration, "heading":heading}) #jsonify take any type and makes a JSON
     
@@ -310,63 +312,36 @@ def movetojunction():
     robot.CurrentCommand = "Auto Moving Forward"
     robot.sound.play_music()
     duration = None
-    duration = robot.move_power_untildistanceto(RPOWER, LPOWER, 20)
+    duration, collision = robot.move_power_untildistanceto(RPOWER, LPOWER, 20)
     robot.sound.pause_music()
     saveevent(duration)
+    robot.CurrentCommand = collision
+    saveevent(0)
     jsonify({ "message":"Auto Moving Forward", "duration":duration }) #jsonify take any type and makes a JSON
     if robot.CurrentCommand != "stop":
-        identifyjunction()
+        identifyjunction(collision)
     return 
 
-def identifyjunction():
-    #working out why the robot has stopped
-    #fire, wall, junction, victim?
-    #robot has different actions for each
+def identifyjunction(collision):
+    #robot has slightly different actions for each collision
     robot.CurrentCommand = "Identifying Junction"
     if robot.CurrentCommand != "stop":
-        distancemeasured = robot.get_ultra_sensor()
-        if distancemeasured > 20 and distancemeasured != 0.0:
-            #no object in front of object
-            duration = 0
-            robot.CurrentCommand = "Junction Detected"
-            saveevent(duration)
+        if collision == "Junction Detected":
             if session['DetectingIntersections'] == True:
                 log("entering junction")
                 robot.move_power_time(RPOWER, LPOWER, 1.9)
-                #log("moved off red tape (entering)")
-                #making sure detected red tape
+                #to get off red tape when entering
                 session['DetectingIntersections'] = False
-                navigateintersection("intersection")
-                #told the navigation function what intersection at
             elif session['DetectingIntersections'] == False:
-                log("exiting junciton")
+                log("exiting junction")
                 robot.move_power_time(RPOWER, LPOWER, 0.5)
                 #to get off red tape when exiting junction
-                #log("moved off red tape (exiting)")
                 session['DetectingIntersections'] = True
                 movetojunction()
-        else:
-            #object in front
-            tempmeasured = robot.get_thermal_sensor()
-            if tempmeasured > 40:
-                duration = 0
-                robot.CurrentCommand = "Fire Detected"
-                saveevent(duration)
-                navigateintersection("fire")
-                #a fire was detected, so the robot treats it as a wall but logs it
-            elif tempmeasured < 20:
-                #using an icepack or cold can of soft drint for victim
-                duration = 0
-                robot.CurrentCommand = "Victim Found"
-                saveevent(duration)
-                session['VictimFound'] = True
-                collectvictim()
-            else:
-                #not fire, not vic, therefor wall
-                duration = 0
-                robot.CurrentComman = "Wall Detected"
-                saveevent(duration)
-                navigateintersection("wall")
+        if collision == "Victim Found"
+            session['VictimFound'] = True
+            collectvictim()
+        navigateintersection(collision) #telling robot what junction at
     return jsonify({ "message":"identifying junction"})
 
 def collectvictim():
@@ -399,7 +374,7 @@ def navigateintersection(collisiontype):
                 saveevent(duration)
                 movetojunction() #start moving forward again
             else:
-                if collisiontype == "intersection":
+                if collisiontype == "Junction Detected":
                     robot.rotate_power_degrees_IMU(20, 90)
                     log("check forward")
                     distancemeasured = robot.get_ultra_sensor()
@@ -428,7 +403,7 @@ def navigateintersection(collisiontype):
                             duration = 0
                             saveevent(duration)
                             movetojunction()
-                elif collisiontype == "wall" or collisiontype == "fire":
+                elif collisiontype == "Wall Detected" or collisiontype == "Fire Detected":
                     #treat the fire as if its a wall, but save fire detected
                     robot.rotate_power_degrees_IMU(20, 180)
                     distancemeasured = robot.get_ultra_sensor()
@@ -461,7 +436,7 @@ def navigateintersection(collisiontype):
                 saveevent(duration)
                 movetojunction()
             else:
-                if collisiontype == "intersection":
+                if collisiontype == "Junction Detected":
                     duration = robot.rotate_power_degrees_IMU(20, -90)
                     distancemeasured = robot.get_ultra_sensor()
                     if distancemeasured >= 30 and distancemeasured != 0.0:
@@ -489,7 +464,7 @@ def navigateintersection(collisiontype):
                             duration = 0
                             saveevent(duration)
                             movetojunction()
-                elif collisiontype == "wall" or collisiontype == "fire":
+                elif collisiontype == "Wall Detected" or collisiontype == "Fire Detected":
                     duration = robot.rotate_power_degrees_IMU(20, 180)
                     distancemeasured = robot.get_ultra_sensor()
                     if distancemeasured >= 30 and distancemeasured != 0.0:
