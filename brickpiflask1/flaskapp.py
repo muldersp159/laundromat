@@ -315,76 +315,101 @@ def movetojunction():
     saveevent(0)
     jsonify({ "message":"Auto Moving Forward", "duration":duration }) #jsonify take any type and makes a JSON
     if robot.CurrentCommand != "stop":
-        identifyjunction(collision)
-    return 
+        return identifyjunction(collision)
+    else:
+        return redirect('/missioncontrol')
 
 def identifyjunction(collision):
-    #robot has slightly different actions for each collision
-    robot.CurrentCommand = "Identifying Junction"
     if robot.CurrentCommand != "stop":
-        if collision == "Junction Detected":
-            if session['DetectingIntersections'] == True:
-                log("entering junction")
-                robot.move_power_time(RPOWER, LPOWER, 1.9)
-                #to get off red tape when entering
-                session['DetectingIntersections'] = False
-            elif session['DetectingIntersections'] == False:
-                log("exiting junction")
-                robot.move_power_time(RPOWER, LPOWER, 0.5)
-                #to get off red tape when exiting junction
-                session['DetectingIntersections'] = True
-                movetojunction()
-        if collision == "Victim Found"
-            session['VictimFound'] = True
-            collectvictim()
-        navigateintersection(collision) #telling robot what junction at
+        #robot has slightly different actions for each collision
+        robot.CurrentCommand = "Identifying Junction"
+        if robot.CurrentCommand != "stop":
+            if collision == "Junction Detected":
+                if session['DetectingIntersections'] == True:
+                    log("entering junction")
+                    robot.move_power_time(RPOWER, LPOWER, 1.9)
+                    #to get off red tape when entering
+                    session['DetectingIntersections'] = False
+                elif session['DetectingIntersections'] == False:
+                    log("exiting junction")
+                    robot.move_power_time(RPOWER, LPOWER, 0.5)
+                    #to get off red tape when exiting junction
+                    session['DetectingIntersections'] = True
+                    movetojunction()
+            if collision == "Victim Found":
+                session['VictimFound'] = True
+                collectvictim()
+            navigateintersection(collision) #telling robot what junction at
     return jsonify({ "message":"identifying junction"})
 
 def collectvictim():
-    robot.CurrentCommand = "Colleting Victim"
-    duration = robot.move_power_untildistanceto(RPOWER, LPOWER, 5)
-    while robot.CurrentCommand != "stop":
-        duration += robot.close_claw()
-        robot.CurrentCommand = 'stop'
-    duration += robot.rotate_power_degrees_IMU(20, 180)
-    #turning robot around to go back way came
-    saveevent(duration)
-    movetojunction()
+    if robot.CurrentCommand != "stop":
+        robot.CurrentCommand = "Colleting Victim"
+        duration = robot.move_power_untildistanceto(RPOWER, LPOWER, 5)
+        while robot.CurrentCommand != "stop":
+            duration += robot.close_claw()
+            robot.CurrentCommand = 'stop'
+        duration += robot.rotate_power_degrees_IMU(20, 180)
+        #turning robot around to go back way came
+        saveevent(duration)
+        movetojunction()
+    return jsonify({"message":"collecting victime"})
 
 def navigateintersection(collisiontype):   
-    robot.CurrentCommand = "Navigating Intersection"
-    starttime = time.time()
-    if session['VictimFound'] == False:
-        #robot hasn't found victim yet
-        #hug left wall
-        robot.rotate_power_degrees_IMU(20, -90)
-        log("check left")
-        if robot.CurrentCommand != "stop":
-            distancemeasured = robot.get_ultra_sensor()
-            #reading ultrasonic to see if there is a wall infront
-            if distancemeasured >= 30 and distancemeasured != 0.0:
-                elapsedtime = time.time() - starttime
-                saveevent(elapsedtime)
-                robot.CurrentCommand = "Turned Left"
-                duration = 0
-                saveevent(duration)
-                movetojunction() #start moving forward again
-            else:
-                if collisiontype == "Junction Detected":
-                    robot.rotate_power_degrees_IMU(20, 90)
-                    log("check forward")
-                    distancemeasured = robot.get_ultra_sensor()
-                    if distancemeasured >= 30 and distancemeasured != 0.0:
-                        elapsedtime = time.time() - starttime
-                        saveevent(elapsedtime)
-                        robot.CurrentCommand = "Went Straight"
-                        duration = 0
-                        saveevent(duration)
-                        movetojunction()
-                    else:
-                        duration = robot.rotate_power_degrees_IMU(20, 90)
+    if robot.CurrentCommand != "stop":
+        robot.CurrentCommand = "Navigating Intersection"
+        log(collisiontype)
+        starttime = time.time()
+        if session['VictimFound'] == False and robot.CurrentCommand != "stop":
+            #robot hasn't found victim yet
+            #hug left wall
+            robot.rotate_power_degrees_IMU(20, -90)
+            log("check left")
+            if robot.CurrentCommand != "stop":
+                distancemeasured = robot.get_ultra_sensor()
+                #reading ultrasonic to see if there is a wall infront
+                if distancemeasured >= 30 and distancemeasured != 0.0 and robot.CurrentCommand != "stop":
+                    elapsedtime = time.time() - starttime
+                    saveevent(elapsedtime)
+                    robot.CurrentCommand = "Turned Left"
+                    duration = 0
+                    saveevent(duration)
+                    movetojunction() #start moving forward again
+                else:
+                    if collisiontype == "Junction Detected" and robot.CurrentCommand != "stop":
+                        robot.rotate_power_degrees_IMU(20, 90)
+                        log("check forward")
                         distancemeasured = robot.get_ultra_sensor()
                         if distancemeasured >= 30 and distancemeasured != 0.0:
+                            elapsedtime = time.time() - starttime
+                            saveevent(elapsedtime)
+                            robot.CurrentCommand = "Went Straight"
+                            duration = 0
+                            saveevent(duration)
+                            movetojunction()
+                        else:
+                            duration = robot.rotate_power_degrees_IMU(20, 90)
+                            distancemeasured = robot.get_ultra_sensor()
+                            if distancemeasured >= 30 and distancemeasured != 0.0 and robot.CurrentCommand != "stop":
+                                elapsedtime = time.time() - starttime
+                                saveevent(elapsedtime)
+                                robot.CurrentCommand = "Turned Right"
+                                duration = 0
+                                saveevent(duration)
+                                movetojunction()
+                            else:
+                                robot.rotate_power_degrees_IMU(20, 90)
+                                elapsedtime = time.time() - starttime
+                                saveevent(elapsedtime)
+                                robot.CurrentCommand = "Reversed"
+                                duration = 0
+                                saveevent(duration)
+                                movetojunction()
+                    elif collisiontype == "Wall Detected" or collisiontype == "Fire Detected" and robot.CurrentCommand != "stop":
+                        #treat the fire as if its a wall, but save fire detected
+                        robot.rotate_power_degrees_IMU(20, 180)
+                        distancemeasured = robot.get_ultra_sensor()
+                        if distancemeasured >= 30 and distancemeasured != 0.0 and robot.CurrentCommand != "stop":
                             elapsedtime = time.time() - starttime
                             saveevent(elapsedtime)
                             robot.CurrentCommand = "Turned Right"
@@ -399,53 +424,52 @@ def navigateintersection(collisiontype):
                             duration = 0
                             saveevent(duration)
                             movetojunction()
-                elif collisiontype == "Wall Detected" or collisiontype == "Fire Detected":
-                    #treat the fire as if its a wall, but save fire detected
-                    robot.rotate_power_degrees_IMU(20, 180)
-                    distancemeasured = robot.get_ultra_sensor()
-                    if distancemeasured >= 30 and distancemeasured != 0.0:
-                        elapsedtime = time.time() - starttime
-                        saveevent(elapsedtime)
-                        robot.CurrentCommand = "Turned Right"
-                        duration = 0
-                        saveevent(duration)
-                        movetojunction()
-                    else:
-                        robot.rotate_power_degrees_IMU(20, 90)
-                        elapsedtime = time.time() - starttime
-                        saveevent(elapsedtime)
-                        robot.CurrentCommand = "Reversed"
-                        duration = 0
-                        saveevent(duration)
-                        movetojunction()
-    elif session['VictimFound'] == True:
-        #robot has collected the victim
-        #hug the right wall back
-        duration = robot.rotate_power_degrees_IMU(20, 90)
-        if robot.CurrentCommand != "stop":
-            distancemeasured = robot.get_ultra_sensor() #reading ultrasonic to see if there is a wall infront
-            if distancemeasured >= 30 and distancemeasured != 0.0:
-                elapsedtime = time.time() - starttime
-                saveevent(elapsedtime)
-                robot.CurrentCommand = "Turned Right"
-                duration = 0
-                saveevent(duration)
-                movetojunction()
-            else:
-                if collisiontype == "Junction Detected":
-                    duration = robot.rotate_power_degrees_IMU(20, -90)
-                    distancemeasured = robot.get_ultra_sensor()
-                    if distancemeasured >= 30 and distancemeasured != 0.0:
-                        elapsedtime = time.time() - starttime
-                        saveevent(elapsedtime)
-                        robot.CurrentCommand = "Went Straight"
-                        duration = 0
-                        saveevent(duration)
-                        movetojunction()
-                    else:
+        elif session['VictimFound'] == True and robot.CurrentCommand != "stop":
+            #robot has collected the victim
+            #hug the right wall back
+            duration = robot.rotate_power_degrees_IMU(20, 90)
+            if robot.CurrentCommand != "stop":
+                distancemeasured = robot.get_ultra_sensor() #reading ultrasonic to see if there is a wall infront
+                if distancemeasured >= 30 and distancemeasured != 0.0 and robot.CurrentCommand != "stop":
+                    elapsedtime = time.time() - starttime
+                    saveevent(elapsedtime)
+                    robot.CurrentCommand = "Turned Right"
+                    duration = 0
+                    saveevent(duration)
+                    movetojunction()
+                else:
+                    if collisiontype == "Junction Detected" and robot.CurrentCommand != "stop":
                         duration = robot.rotate_power_degrees_IMU(20, -90)
                         distancemeasured = robot.get_ultra_sensor()
-                        if distancemeasured >= 30 and distancemeasured != 0.0:
+                        if distancemeasured >= 30 and distancemeasured != 0.0 and robot.CurrentCommand != "stop":
+                            elapsedtime = time.time() - starttime
+                            saveevent(elapsedtime)
+                            robot.CurrentCommand = "Went Straight"
+                            duration = 0
+                            saveevent(duration)
+                            movetojunction()
+                        else:
+                            duration = robot.rotate_power_degrees_IMU(20, -90)
+                            distancemeasured = robot.get_ultra_sensor()
+                            if distancemeasured >= 30 and distancemeasured != 0.0 and robot.CurrentCommand != "stop":
+                                elapsedtime = time.time() - starttime
+                                saveevent(elapsedtime)
+                                robot.CurrentCommand = "Turned Left"
+                                duration = 0
+                                saveevent(duration)
+                                movetojunction()
+                            else:
+                                robot.rotate_power_degrees_IMU(20, -90)
+                                elapsedtime = time.time() - starttime
+                                saveevent(elapsedtime)
+                                robot.CurrentCommand = "Reversed"
+                                duration = 0
+                                saveevent(duration)
+                                movetojunction()
+                    elif collisiontype == "Wall Detected" or collisiontype == "Fire Detected" and robot.CurrentCommand != "stop":
+                        duration = robot.rotate_power_degrees_IMU(20, 180)
+                        distancemeasured = robot.get_ultra_sensor()
+                        if distancemeasured >= 30 and distancemeasured != 0.0 and robot.CurrentCommand != "stop":
                             elapsedtime = time.time() - starttime
                             saveevent(elapsedtime)
                             robot.CurrentCommand = "Turned Left"
@@ -460,24 +484,6 @@ def navigateintersection(collisiontype):
                             duration = 0
                             saveevent(duration)
                             movetojunction()
-                elif collisiontype == "Wall Detected" or collisiontype == "Fire Detected":
-                    duration = robot.rotate_power_degrees_IMU(20, 180)
-                    distancemeasured = robot.get_ultra_sensor()
-                    if distancemeasured >= 30 and distancemeasured != 0.0:
-                        elapsedtime = time.time() - starttime
-                        saveevent(elapsedtime)
-                        robot.CurrentCommand = "Turned Left"
-                        duration = 0
-                        saveevent(duration)
-                        movetojunction()
-                    else:
-                        robot.rotate_power_degrees_IMU(20, -90)
-                        elapsedtime = time.time() - starttime
-                        saveevent(elapsedtime)
-                        robot.CurrentCommand = "Reversed"
-                        duration = 0
-                        saveevent(duration)
-                        movetojunction()
     return jsonify({ "message":"Navigating Intersection"})
 
 #creates a route to get all the user data
@@ -530,6 +536,8 @@ def reconfigIMU():
 @app.route('/stop', methods=['GET','POST'])
 def stop():
     robot.stop_all()
+    robot.sound.pause_music()
+    robot.sound.say("stopping")
     return jsonify({ "message":"stopping" })
 
 #Shutdown the web server
@@ -541,6 +549,8 @@ def shutdown():
     session.clear()
     #clearing all info in session
     #(ie. user details, fire details, etc.)
+    robot.sound.pause_music()
+    robot.sound.say("Shutting Down")
     robot.safe_exit()
     #shuts down the robot's sensors and motors
     func = request.environ.get('werkzeug.server.shutdown')

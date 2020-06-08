@@ -50,11 +50,11 @@ class SoundInterface():
 #---------------------------------------------
 #only execute if this is the main file, good for testing code.
         
-if name == "__main__":
-    sound.SoundInterface()
-    sound.play_music()
+if __name__ == "__main__":
+    sound = SoundInterface()
     #letting the user know help is on the way
     sound.say("I am here to save you fool. Why you so dumb dumb to get stuck in a fire in the first place")
+    sound.play_music()
     
     
     

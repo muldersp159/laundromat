@@ -372,6 +372,7 @@ class BrickPiInterface():
         starttime = time.time()
         timelimit = starttime + self.timelimit  #all timelimits are a backup plan
         collisiontype = None
+        colour = None
         #Turn motors on
         bp.set_motor_power(bp.PORT_A, Rpower)
         bp.set_motor_power(bp.PORT_B, Lpower)
@@ -379,13 +380,13 @@ class BrickPiInterface():
             #if sensor fails, or distanceto has been reached quit, or distancedetected = 0
             distancedetected = self.get_ultra_sensor()
             colour = self.get_colour_sensor()
-            if ((self.config['ultra'] > DISABLED) or (distancedetected < distanceto and distancedetected != 0.0) or colour == "Red"): 
+            if ((self.config['ultra'] > DISABLED) or (distancedetected < distanceto and distancedetected != 0.0) or colour == "Red" or robot.CurrentCommand == "stop"): 
                 break 
         #testing what caused robot to stop
         #doing this now rather than multiple times in Flaskapp
+        tempmeasured = self.get_thermal_sensor()
         if colour == "Red":
             collisiontype = "Junction Detected"
-        tempmeasured = self.get_thermal_sensor()
         elif tempmeasured > 40:
             collisiontype = "Fire Detected"
         elif tempmeasured < 10:        #using an icepack or cold can of soft drint for victim
