@@ -9,9 +9,39 @@
     <script src="/static/scripts/jsonrequesthandler.js"></script>
   
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
+    <style>
+        html {
+            background-image: url("https://images.theconversation.com/files/310409/original/file-20200116-181629-1xtqhv8.jpg?ixlib=rb-1.1.0&rect=268%2C32%2C1374%2C746&q=45&auto=format&w=496&fit=clip");
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            background-size: cover;
+            padding-top: 30px;
+            position: relative;
+            margin-right: 30px;
+            margin-left: 30px;
+            margin-bottom: 20px;
+            font-size: 14pt;
+            font-family: Calibri;
+            scroll-behavior: smooth;
+            }
+        div.bodystyle{
+            background-color: rgb(255, 255, 255,0.93);
+            padding-left: 10px;
+            padding-right: 10px;
+            padding-bottom: 10px;
+            padding-top:10px;
+            height: 100%;
+            display: block;
+            border-top: 3px solid #ff8080;
+            border-left: 3px solid #ff8080;
+            border-right: 3px solid #ff8080;
+            border-bottom: 3px solid #ff8080;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,5);
+            }
+    </style>
 </head>
 
-<body style="padding:30px;font-size:16px;">
+<body style="padding:30px;font-size:16px;height:max;">
         <nav class="navbar navbar-expand-lg navbar navbar-dark bg-danger">
                 <a href="/" class="navbar-brand">BrickPiFlask</a>
                 <button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#navbarCollapse2">
@@ -27,8 +57,9 @@
                 </div>
             </nav>
 <br>
-
-    {% block content %}{% endblock %} <!-- Container for Content -->
+    <div class="bodystyle">
+        {% block content %}{% endblock %} <!-- Container for Content -->
+    </div>
     <footer>
         {% for message in get_flashed_messages() %}
         <div class='alert'>

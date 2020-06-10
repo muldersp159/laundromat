@@ -2,16 +2,29 @@
 {% block scripts %}
 {% endblock %}
 {% block content %}
+<style>
+    td{
+        width: 50%;
+        }
+</style>
 <h2>Login</h2>
 <div class="container">
-    <form action="/" method="POST">
-        Email:<br>
-        <input type="email" name="email" value="" required>
-        <br>
-        Password:<br>
-        <input type="password" name="password" value="" required>
-        <br><br>
-        <input type="submit" value="Submit">
-    </form>
+    <table>
+        <td style="text-align:left;vertical-align:top;">
+            <form action="/" method="POST">
+                <div class="form-group">
+                    <label for="exampleInputEmail1">Email:</label>
+                    <input type="email" class="form-control" id="email" aria-describedby="emailHelp" placeholder="" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="exampleInputEmail1">Password:</label>
+                    <input type="password" class="form-control" id="password" aria-describedby="emailHelp" placeholder="" name="password" required>
+                </div>
+                <br>
+                <input type="submit" value="Submit">
+            </form>
+        </td>
+        <td style="text-align:right;vertical-align:centre;"><img src="https://external-content.duckduckgo.com/iu/?u=http%3A%2F%2Fwww.brisbanesmokealarmmaintenance.com.au%2Fresources%2FQFRS_Logo.png&f=1&nofb=1" style="max-width: 60%; height:auto;"></td>
+    </table>
 </div>
 {% endblock %}

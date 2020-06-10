@@ -380,10 +380,11 @@ class BrickPiInterface():
             #if sensor fails, or distanceto has been reached quit, or distancedetected = 0
             distancedetected = self.get_ultra_sensor()
             colour = self.get_colour_sensor()
-            if ((self.config['ultra'] > DISABLED) or (distancedetected < distanceto and distancedetected != 0.0) or colour == "Red" or robot.CurrentCommand == "stop"): 
+            if ((self.config['ultra'] > DISABLED) or (distancedetected < distanceto and distancedetected != 0.0) or colour == "Red" or self.CurrentCommand == "stop"): 
                 break 
         #testing what caused robot to stop
         #doing this now rather than multiple times in Flaskapp
+        bp.set_motor_power(self.largemotors, 0)
         tempmeasured = self.get_thermal_sensor()
         if colour == "Red":
             collisiontype = "Junction Detected"
@@ -394,7 +395,6 @@ class BrickPiInterface():
         elif tempmeasured < 40 and tempmeasured > 10:         #not fire, not vic, therefor wall
             collisiontype = "Wall Detected"
         elapsedtime = time.time() - starttime
-        bp.set_motor_power(self.largemotors, 0)
         return (elapsedtime, collisiontype)
         #elapsed time used in data storage and map drawing
 

@@ -39,7 +39,7 @@ function draw_path_automated(result){
         //have to create a new line for each stroke 
         //to have different colour parts
         turtle.angle(heading);
-        turtle.go(15*elapsedtime).stroke();
+        turtle.go(15).stroke();
     }
     
     else if (eventtype == "Fire Detected"){
