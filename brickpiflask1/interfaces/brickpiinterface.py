@@ -390,9 +390,9 @@ class BrickPiInterface():
             collisiontype = "Junction Detected"
         elif tempmeasured > 40:
             collisiontype = "Fire Detected"
-        elif tempmeasured < 10:        #using an icepack or cold can of soft drint for victim
+        elif tempmeasured < 18:        #using an icepack or cold can of soft drint for victim
             collisiontype = "Victim Found"
-        elif tempmeasured < 40 and tempmeasured > 10:         #not fire, not vic, therefor wall
+        elif tempmeasured < 40 and tempmeasured > 18:         #not fire, not vic, therefor wall
             collisiontype = "Wall Detected"
         elapsedtime = time.time() - starttime
         return (elapsedtime, collisiontype)
