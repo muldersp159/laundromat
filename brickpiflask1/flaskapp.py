@@ -1,27 +1,17 @@
 from flask import Flask, render_template, jsonify, redirect, request, session, flash
 import logging #allow loggings
 import time, sys, json
-import yourrobot #import in your own robot functionality
 from interfaces.databaseinterface import DatabaseHelper
 from datetime import datetime
 
-#Create the database
+#Create a way to interact with database
 database = DatabaseHelper('test.sqlite')
-
-#Create Robot first. It take 4 seconds to initialise the robot, sensor view wont work until robot is created...
-robot = yourrobot.Robot()
-if robot.get_battery() < 6: #the robot motors will disable at 6 volts
-    robot.safe_exit()
 
 #Global Variables
 app = Flask(__name__)
 SECRET_KEY = 'my random key can be anything' #this is used for encrypting sessions
 app.config.from_object(__name__) #Set app configuration using above SETTINGS
-robot.set_log(app.logger) #set the logger inside the robot
 database.set_log(app.logger) #set the logger inside the database
-LPOWER = 32 #constant power/speed
-RPOWER = 30 #to account for an inconsistancy in the output of the two motors
-junctionColour = "Red"
 
 #Request Handlers ---------------------------------------------
 #home page and login
