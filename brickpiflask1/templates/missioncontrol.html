@@ -3,66 +3,94 @@
   <script src="/static/scripts/missioncontrol.js"></script>
 {% endblock %}
 {% block content %}
-<h2>Sample Web Interface using Bootstrap</h2><br/>
-<p>The buttons when clicked run a special script that can be used to send data to the server without a form (and the necessary page refresh). This helper script uses JSON (a method of sending complex data through text encoding).</p>
-<p>The helper function can be used as follows <b>JSONrequest</b>(/url, "POST",name_of_callback_function, {var1:"value1",var2:"value2"...})</p><p><i>The callback function receives a result object that contains response data.</i></p><p>A simpler call can be made: <b>JSONrequest</b>(/url, "POST") if you do not wish to send or receive data.</p>
-<h3>Voltage = {{voltage}}</h3>
+<h2>TAV's Laundromat</h2><br/>
+<!-- <p>The buttons when clicked run a special script that can be used to send data to the server without a form (and the necessary page refresh). This helper script uses JSON (a method of sending complex data through text encoding).</p>
+<p>The helper function can be used as follows <b>JSONrequest</b>(/url, "POST",name_of_callback_function, {var1:"value1",var2:"value2"...})</p><p><i>The callback function receives a result object that contains response data.</i></p><p>A simpler call can be made: <b>JSONrequest</b>(/url, "POST") if you do not wish to send or receive data.</p> -->
 <div class="container">
     <div class="row">
         <h3 id="message"></h3>
     </div>
     <div class="container">
-        <div class="row text-center">
-          <div class="col-4">
-            <button type="button" class="btn btn-dark" onclick="JSONrequest('/turnleft','POST')">Turn Left</button>
-          </div>
-          <div class="col-4">
-            <button type="button" class="btn btn-success" onclick="JSONrequest('/start','POST')">Start</button>
-          </div>
-          <div class="col-4">
-            <button type="button" class="btn btn-dark" onclick="JSONrequest('/turnright','POST')">Turn Right</button>
-          </div>
-          
-          <div class="col-4">
-            <button type="button" class="btn btn-success" style="background-color: white; border: none;" onclick=""></button>
-          </div>
-          <div class="col-4">
-            <button type="button" class="btn btn-success" style="background-color: white; border: none;" onclick=""></button>
-          </div>
-          <div class="col-4">
-            <button type="button" class="btn btn-success" style="background-color: white; border: none;" onclick=""></button>
-          </div>
-          
-          <div class="col-4">
-            <button type="button" class="btn btn-danger" onclick="JSONrequest('/stop','POST')">Stop</button>
-          </div>
-          <div class="col-4">
-            <button type="button" class="btn btn-success" onclick="JSONrequest('/reverse','POST')">Reverse</button>
-          </div>
-          <div class="col-4">
-            <button type="button" class="btn btn-danger" onclick="shutdownserver();">Shutdown Server</button>
-          </div>
-          
-          <div class="col-4">
-            <button type="button" class="btn btn-success" style="background-color: white; border: none;" onclick=""></button>
-          </div>
-          <div class="col-4">
-            <button type="button" class="btn btn-success" style="background-color: white; border: none;" onclick=""></button>
-          </div>
-          <div class="col-4">
-            <button type="button" class="btn btn-success" style="background-color: white; border: none;" onclick=""></button>
-          </div>
-          
-          <div class="col-4">
-            <button type="button" class="btn btn-success" onclick="JSONrequest('/closeclaw','POST')">Close Claw</button>
-          </div>
-          <div class="col-4">
-            <button type="button" class="btn btn-success" onclick="JSONrequest('/tojunction', 'POST')">Move To Junction</button>
-          </div>
-          <div class="col-4">
-            <button type="button" class="btn btn-success" onclick="JSONrequest('/openclaw','POST')">Open Claw</button>
-          </div>
-        </div>
-      </div>
+        <button type="button" class="btn" onclick="JSONrequest('/allitems','POST')">All Itmes</button>
+        <button type="button" class="btn" onclick="JSONrequest('/allcustomers','POST')">Select A Customer</button>
+        <button type="button" class="btn" onclick="JSONrequest('/','POST')"></button>
+        <button type="button" class="btn" onclick="JSONrequest('/','POST')"></button>      
+    </div>
+    <div>
+      {% if session['view'] == "all" %}
+        {% if allitems != "no items" %}
+          <table> <!-- all items -->
+            <tr>
+              <th>EPC</th>
+              <th>Product</th>
+              <th>Checkout</th>
+              <th>Return</th>
+            </tr>
+            {% for items in allitems %}
+              <tr>
+                <td>{{items['EPC']}}</td>
+                <td>{{itmes['Product']}}</td>
+                <td>{{itmes['Checkout']}}</td>
+                <td>{{itmes['Return']}}</td>
+              </tr>
+            {% endfor %}
+          </table>
+        {% endif %}
+      {% endif %}
+      {% if session['view'] == "customer" or session['view'] == "customers" %}
+        <form action='/dataslection' method="POST">
+          <div class="form-group">
+              <label for="exampleInputEmail1">Select A Customer</label>
+                  <select name="customerselect" class="form-control" id="stateinput">
+                      {% if customerdetails != "No Past Customers" %}
+                          {% for customer in customerdetails %}
+                              <option value={{customer['customerid']}}>{{customer['fullname']}}</option>
+                              <!-- only creates dropd-down if customers returned -->
+                          {% endfor %}
+                      {% else %}
+                          <option value={{fires}}>{{fires}}</option>
+                          <!-- shows "No Past Customers" -->
+                      {% endif %}
+                  </select>
+              </div>
+          <input class="btn btn-info" type="submit" value="See Data From This Customer">
+        </form>
+          {% if session['view'] == "customer" %}
+            <p>Address: {{customerinfo['address']}}</p>
+            <p>Phone Number: {{customerinfo['phone']}}</p>
+            {% if customeritems != "Customer Has No Unreturned Items" %}
+              <table> <!-- the number of each type of item a customer has unteturned -->
+                  <tr>
+                    <th>Number of Product</th>
+                    <th>Product</th>
+                  </tr>
+                  {% for itemgroup in numcustomeritems %}
+                    <tr>
+                      <td>{{itemgroup['Amount']}}</td>
+                      <td>{{itemgroup['Product']}}</td>
+                    </tr>
+                  {% endfor %}
+              </table>
+              
+              <table> <!-- the individual items a customer has unteturned -->
+                <tr>
+                  <th>EPC</th>
+                  <th>Product</th>
+                  <th>Checkout</th>
+                </tr>
+                {% for item in customeritems %}
+                  <tr>
+                    <td>{{item['EPC']}}</td>
+                    <td>{{item['Product']}}</td>
+                    <td>{{item['Checkout']}}</td>
+                  </tr>
+                {% endfor %}
+              </table>
+            {% else %}
+              <h3>Customer Has No Unreturned Items</h3>
+            {% endif %}
+          {% endif %}
+      {% endif %}
+    </div>
 </div>
 {% endblock %}
