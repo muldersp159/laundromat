@@ -24,6 +24,7 @@ def index():
         email = request.form['email']   #get the form field with the name 
         password = request.form['password']
         # TODO - need to make sure only one user is able to login at a time...
+        userdetails = []
         userdetails = database.ViewQueryHelper("SELECT * FROM users WHERE email=? AND password=?",(email,password))
         if len(userdetails) != 0:  #rows have been found
             row = userdetails[0] #userdetails is a list of dictionaries
