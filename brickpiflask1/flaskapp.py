@@ -24,13 +24,11 @@ def index():
         email = request.form['email']   #get the form field with the name 
         password = request.form['password']
         # TODO - need to make sure only one user is able to login at a time...
-        userdetails = []
-        userdetails = database.ViewQueryHelper("SELECT * FROM users WHERE email=? AND password=?",(email,password))
+        userdetails = database.ViewQueryHelper("SELECT * FROM users WHERE email = ? AND password = ?",(email,password,))
         if len(userdetails) != 0:  #rows have been found
             row = userdetails[0] #userdetails is a list of dictionaries
             session['userid'] = row['userid']
-            session['username'] = row['username']
-            session['permission'] = row['permission']
+            session['fullname'] = row['fullname']
             session['view'] = "all"
             return redirect('./missioncontrol')
         else:
@@ -44,7 +42,7 @@ def index():
 def dataselection():
     #putting type of data user wants to see into session
     session['customerid'] = request.form['customerselect']
-    session['view'] = "customer"
+    print("customer " + str(session['customerid']) + " seleced")
     return redirect('/missioncontrol')
 
 @app.route('/allcustomers', methods=['GET','POST'])
@@ -64,26 +62,28 @@ def allitems():
 def missioncontrol():
     if 'userid' not in session:
         return redirect('./') #no form data is carried across using 'dot/'
-    customerdetails = []
-    customeritems = []
-    numcustomeritems = []
-    allitems = []
-    customerinfo = []
+    print(session['view'])
+    customerdetails = ""
+    customeritems = ""
+    numcustomeritems = ""
+    allitems = ""
+    customerinfo = ""
     if session['view'] == "all":
         allitems = database.ViewQueryHelper("SELECT reads.epc AS EPC, abbreviations.full AS Product, reads.checkout AS Checkout, reads.return AS Return FROM reads, abbreviations, orders, customers, tags WHERE reads.orderid = orders.orderid AND orders.customerid = customers.customerid AND reads.epc = tags.epc AND tags.type = abbreviations.abbreviation ORDER BY reads.return DESC, abbreviations.full ASC, reads.epc;") 
+        countitmes = database.ViewQueryHelper("SELECT COUNT(reads.epc) AS Amount, abbreviations.full AS Product FROM reads, abbreviations, orders, customers, tags WHERE reads.orderid = orders.orderid AND orders.customerid = customers.customerid AND reads.epc = tags.epc AND tags.type = abbreviations.abbreviation AND GROUP BY abbreviations.full ORDER BY abbreviations.full ASC;") 
         if len(allitems) == 0:
             allitems = "no items"
     elif session['view'] == "customers":
         customerdetails = database.ViewQueryHelper("SELECT customerid, fullname FROM customers")
         if len(customerdetails) == 0:
-            customerdetails = "No Customers"
+            customerdetails = "No Past Customers"
     elif session['view'] == "customer":
         customeritems = database.ViewQueryHelper("SELECT reads.epc AS EPC, abbreviations.full AS Product, reads.checkout AS Checkout FROM reads, abbreviations, orders, customers, tags WHERE reads.orderid = orders.orderid AND orders.customerid = customers.customerid AND reads.epc = tags.epc AND tags.type = abbreviations.abbreviation AND reads.return = 'NA' AND customers.customerid = ? ORDER BY abbreviations.full ASC, reads.epc",(session['customerid'],))
         numcustomeritems = database.ViewQueryHelper("SELECT COUNT(reads.epc) AS Amount, abbreviations.full AS Product FROM reads, abbreviations, orders, customers, tags WHERE reads.orderid = orders.orderid AND orders.customerid = customers.customerid AND reads.epc = tags.epc AND tags.type = abbreviations.abbreviation AND reads.return = 'NA' AND customers.customerid = ? GROUP BY abbreviations.full ORDER BY abbreviations.full ASC;",(session['customerid'],)) 
-        customerinfo = database.ViewQueryHelper("SELECT fullname, phone FROM customers WHERE customerid = ?",(session['customerid'],))
+        customerinfo = database.ViewQueryHelper("SELECT fullname, phone, address FROM customers WHERE customerid = ?",(session['customerid'],))
         if len(customeritems) == 0:
             customeritems = "Customer Has No Unreturned Items"
-    return render_template("missioncontrol.html", customerdetails = customerdetails, customeritems = customeritems, numcustomeritems = numcustomeritems, allitems = allitems, customerinfo = customerinfo)
+    return render_template("missioncontrol.html", customerdetails = customerdetails, customeritems = customeritems, numcustomeritems = numcustomeritems, allitems = allitems, customerinfo = customerinfo, session = session)
 
 '''
 @app.route('/checkin', methods=['GET','POST'])
@@ -120,9 +120,15 @@ def getallusers():
 @app.route('/shutdown', methods=['GET','POST'])
 def shutdown():
     log("shutting down")
+    session.clear()
     func = request.environ.get('werkzeug.server.shutdown')
     func()
     return jsonify({ "message":"shutting down" })
+
+@app.route('/logout', methods=['GET', 'POST'])
+def logout():
+    session.clear()
+    return redirect('./')
 
 #Log a message
 def log(message):

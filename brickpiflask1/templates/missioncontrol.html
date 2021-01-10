@@ -17,7 +17,7 @@
         <button type="button" class="btn" onclick="JSONrequest('/','POST')"></button>      
     </div>
     <div>
-      {% if session['view'] == "all" %}
+      {% if allitems != "" %}
         {% if allitems != "no items" %}
           <table> <!-- all items -->
             <tr>
@@ -35,27 +35,30 @@
               </tr>
             {% endfor %}
           </table>
+        {% else %}
+          <h6>Sorry, but there are no items listed in the database</h6>
         {% endif %}
       {% endif %}
-      {% if session['view'] == "customer" or session['view'] == "customers" %}
-        <form action='/dataslection' method="POST">
-          <div class="form-group">
-              <label for="exampleInputEmail1">Select A Customer</label>
-                  <select name="customerselect" class="form-control" id="stateinput">
-                      {% if customerdetails != "No Past Customers" %}
-                          {% for customer in customerdetails %}
-                              <option value={{customer['customerid']}}>{{customer['fullname']}}</option>
-                              <!-- only creates dropd-down if customers returned -->
-                          {% endfor %}
-                      {% else %}
-                          <option value={{fires}}>{{fires}}</option>
-                          <!-- shows "No Past Customers" -->
-                      {% endif %}
-                  </select>
-              </div>
-          <input class="btn btn-info" type="submit" value="See Data From This Customer">
-        </form>
-          {% if session['view'] == "customer" %}
+      {% if customerdetails != "" %}
+        {% if customerdetails != "No Past Customers" %}
+          <form action='/dataslection' method="POST">
+            <div class="form-group">
+                <label for="exampleInputEmail1">Select A Customer</label>
+                    <select name="customerselect" class="form-control" id="stateinput">
+                      {% for customer in customerdetails %}
+                          <option value={{customer['customerid']}}>{{customer['fullname']}}</option>
+                          <!-- only creates drop-down if customers returned -->
+                      {% endfor %}
+                    </select>
+                </div>
+            <input class="btn btn-info" type="submit" value="See Data From This Customer">
+          </form>
+        {% else %}
+          <h6>{{customerdetails}}</h6>
+          <!-- shows "No Past Customers" -->
+        {% endif %}
+          {% if customerinfo != "" %}
+            <p>Customer Info: {{customerinfo['fullname']}}</p>
             <p>Address: {{customerinfo['address']}}</p>
             <p>Phone Number: {{customerinfo['phone']}}</p>
             {% if customeritems != "Customer Has No Unreturned Items" %}
@@ -87,7 +90,7 @@
                 {% endfor %}
               </table>
             {% else %}
-              <h3>Customer Has No Unreturned Items</h3>
+              <h3>{{customerinfo}}</h3> <!-- shows "customer has no items" -->
             {% endif %}
           {% endif %}
       {% endif %}
