@@ -70,7 +70,7 @@ def missioncontrol():
     customerinfo = ""
     if session['view'] == "all":
         allitems = database.ViewQueryHelper("SELECT reads.epc AS EPC, abbreviations.full AS Product, reads.checkout AS Checkout, reads.return AS Return FROM reads, abbreviations, orders, customers, tags WHERE reads.orderid = orders.orderid AND orders.customerid = customers.customerid AND reads.epc = tags.epc AND tags.type = abbreviations.abbreviation ORDER BY reads.return DESC, abbreviations.full ASC, reads.epc;") 
-        countitmes = database.ViewQueryHelper("SELECT COUNT(reads.epc) AS Amount, abbreviations.full AS Product FROM reads, abbreviations, orders, customers, tags WHERE reads.orderid = orders.orderid AND orders.customerid = customers.customerid AND reads.epc = tags.epc AND tags.type = abbreviations.abbreviation AND GROUP BY abbreviations.full ORDER BY abbreviations.full ASC;") 
+        #countitmes = database.ViewQueryHelper("SELECT COUNT(reads.epc) AS Amount, abbreviations.full AS Product FROM reads, abbreviations, orders, customers, tags WHERE reads.orderid = orders.orderid AND orders.customerid = customers.customerid AND reads.epc = tags.epc AND tags.type = abbreviations.abbreviation AND GROUP BY abbreviations.full ORDER BY abbreviations.full ASC;") 
         if len(allitems) == 0:
             allitems = "no items"
     elif session['view'] == "customers":
@@ -83,6 +83,7 @@ def missioncontrol():
         customerinfo = database.ViewQueryHelper("SELECT fullname, phone, address FROM customers WHERE customerid = ?",(session['customerid'],))
         if len(customeritems) == 0:
             customeritems = "Customer Has No Unreturned Items"
+    print("checking if refreshing page")
     return render_template("missioncontrol.html", customerdetails = customerdetails, customeritems = customeritems, numcustomeritems = numcustomeritems, allitems = allitems, customerinfo = customerinfo, session = session)
 
 '''
@@ -104,11 +105,11 @@ def sensorview():
     return render_template("sensorview.html")
 
 #map or table of fire and path data
-@app.route('/map', methods=['GET','POST'])
+@app.route('/checkinout', methods=['GET','POST'])
 def map():
     if 'userid' not in session:
         return redirect('./') #no form data is carried across using 'dot/'
-    return render_template('map.html')
+    return render_template('checkinout.html')
 
 #creates a route to get all the event data
 @app.route('/getallusers', methods=['GET','POST'])
