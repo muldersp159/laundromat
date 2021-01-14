@@ -19,7 +19,22 @@
     <div>
       {% if allitems != "" %}
         {% if allitems != "no items" %}
-          <table> <!-- all items -->
+        <p>The number of each type of items</p>
+          <table>
+            <tr>
+              <th>Number of Product</th>
+              <th>Product</th>
+            </tr>
+            {% for count in countitmes %}
+              <tr>
+                <td>{{count['Amount']}}</td>
+                <td>{{count['Product']}}</td>
+              </tr>
+            {% endfor %}
+          </table><br><br>
+
+          <p>List of all itmes</p>
+          <table>
             <tr>
               <th>EPC</th>
               <th>Product</th>
@@ -39,15 +54,15 @@
           <h6>Sorry, but there are no items listed in the database</h6>
         {% endif %}
       {% endif %}
+
       {% if customerdetails != "" %}
-        {% if customerdetails != "No Past Customers" %}
+        {% if customerdetails != "No Past Customers" %} <!-- only creates drop-down if customers returned -->
           <form action='/dataslection' method="POST">
             <div class="form-group">
                 <label for="exampleInputEmail1">Select A Customer</label>
                     <select name="customerselect" class="form-control" id="stateinput">
                       {% for customer in customerdetails %}
                           <option value={{customer['customerid']}}>{{customer['fullname']}}</option>
-                          <!-- only creates drop-down if customers returned -->
                       {% endfor %}
                     </select>
                 </div>
@@ -57,42 +72,47 @@
           <h6>{{customerdetails}}</h6>
           <!-- shows "No Past Customers" -->
         {% endif %}
-          {% if customerinfo != "" %}
-            <p>Customer Info: {{customerinfo['fullname']}}</p>
-            <p>Address: {{customerinfo['address']}}</p>
-            <p>Phone Number: {{customerinfo['phone']}}</p>
-            {% if customeritems != "Customer Has No Unreturned Items" %}
-              <table> <!-- the number of each type of item a customer has unteturned -->
-                  <tr>
-                    <th>Number of Product</th>
-                    <th>Product</th>
-                  </tr>
-                  {% for itemgroup in numcustomeritems %}
-                    <tr>
-                      <td>{{itemgroup['Amount']}}</td>
-                      <td>{{itemgroup['Product']}}</td>
-                    </tr>
-                  {% endfor %}
-              </table>
-              
-              <table> <!-- the individual items a customer has unteturned -->
+
+        {% if customerinfo != "" %}
+          <p>Customer Info: {{customerinfo['fullname']}}</p>
+          <p>Address: {{customerinfo['address']}}</p>
+          <p>Phone Number: {{customerinfo['phone']}}</p>
+          <p>Email: {{customerinfo['email']}}</p>
+          {% if customeritems != "Customer Has No Unreturned Items" %}
+            <p>The number of each type of item a customer has unteturned</p>
+            <table>
                 <tr>
-                  <th>EPC</th>
+                  <th>Number of Product</th>
                   <th>Product</th>
-                  <th>Checkout</th>
                 </tr>
-                {% for item in customeritems %}
+                {% for itemgroup in numcustomeritems %}
                   <tr>
-                    <td>{{item['EPC']}}</td>
-                    <td>{{item['Product']}}</td>
-                    <td>{{item['Checkout']}}</td>
+                    <td>{{itemgroup['Amount']}}</td>
+                    <td>{{itemgroup['Product']}}</td>
                   </tr>
                 {% endfor %}
-              </table>
-            {% else %}
-              <h3>{{customerinfo}}</h3> <!-- shows "customer has no items" -->
-            {% endif %}
+            </table>
+            <br><br>
+            
+            <p>Every item a customer has unteturned</p>
+            <table>
+              <tr>
+                <th>EPC</th>
+                <th>Product</th>
+                <th>Checkout</th>
+              </tr>
+              {% for item in customeritems %}
+                <tr>
+                  <td>{{item['EPC']}}</td>
+                  <td>{{item['Product']}}</td>
+                  <td>{{item['Checkout']}}</td>
+                </tr>
+              {% endfor %}
+            </table>
+          {% else %}
+            <h3>{{customerinfo}}</h3> <!-- shows "customer has no items" -->
           {% endif %}
+        {% endif %}
       {% endif %}
     </div>
 </div>
