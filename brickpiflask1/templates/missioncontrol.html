@@ -1,6 +1,14 @@
 {% extends "layout.html" %}
 {% block scripts %}
   <script src="/static/scripts/missioncontrol.js"></script>
+  <script>
+    function allitems() {
+      location.replace("/allitems")
+    }
+    function selectcustomer() {
+      location.replace("/allcustomers")
+    }
+  </script>
 {% endblock %}
 {% block content %}
 <h2>TAV's Laundromat</h2><br/>
@@ -11,8 +19,8 @@
         <h3 id="message"></h3>
     </div>
     <div class="container">
-        <button type="button" class="btn" onclick="JSONrequest('/allitems','POST')">All Itmes</button>
-        <button type="button" class="btn" onclick="JSONrequest('/allcustomers','POST')">Select A Customer</button>
+        <button type="button" class="btn" onclick="allitems()">All Itmes</button>
+        <button type="button" class="btn" onclick="selectcustomer()">Select A Customer</button>
         <button type="button" class="btn" onclick="JSONrequest('/','POST')"></button>
         <button type="button" class="btn" onclick="JSONrequest('/','POST')"></button>      
     </div>
@@ -57,7 +65,7 @@
 
       {% if customerdetails != "" %}
         {% if customerdetails != "No Past Customers" %} <!-- only creates drop-down if customers returned -->
-          <form action='/dataslection' method="POST">
+          <form action='/dataselection' method="POST">
             <div class="form-group">
                 <label for="exampleInputEmail1">Select A Customer</label>
                     <select name="customerselect" class="form-control" id="stateinput">

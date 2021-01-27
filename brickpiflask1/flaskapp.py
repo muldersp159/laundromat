@@ -64,6 +64,7 @@ def missioncontrol():
         return redirect('./') #no form data is carried across using 'dot/'
     print(session['view'])
     customerdetails = ""
+    countitmes = ""
     customeritems = ""
     numcustomeritems = ""
     allitems = ""
@@ -99,7 +100,7 @@ def checkout():
 
 @app.route('/updateusers', methods=['GET','POST'])
 def updateusers():
-    if 'userid' not in session or session['permission'] != "admin":
+    if 'userid' not in session:
         return redirect('./')
     return render_template("updateusers.html")
 
