@@ -29,7 +29,10 @@ def index():
             row = userdetails[0] #userdetails is a list of dictionaries
             session['userid'] = row['userid']
             session['fullname'] = row['fullname']
+            session['permission'] = row['permission']
             session['view'] = "all"
+            session['usersearch'] = ""
+            session['searchid'] = ""
             return redirect('./missioncontrol')
         else:
             flash("Sorry no user found, password or username incorrect")
@@ -40,6 +43,8 @@ def index():
 #triggered when a user selects which customer they want to view
 @app.route('/dataselection', methods=['GET','POST'])
 def dataselection():
+    if 'userid' not in session:
+        return redirect('./')
     #putting type of data user wants to see into session
     session['customerid'] = request.form['customerselect']
     print("customer " + str(session['customerid']) + " seleced")
@@ -47,12 +52,16 @@ def dataselection():
 
 @app.route('/allcustomers', methods=['GET','POST'])
 def allcustomers():
+    if 'userid' not in session:
+        return redirect('./')
     #updating the session when the user selects that they want to pick form a customer to view data
     session['view'] = "customers"
     return redirect('/missioncontrol')
 
 @app.route('/allitems', methods=['GET','POST'])
 def allitems():
+    if 'userid' not in session:
+        return redirect('./')
     #updating the session when the user selects that they want to pick form a customer to view data
     session['view'] = "all"
     return redirect('/missioncontrol')
@@ -62,7 +71,6 @@ def allitems():
 def missioncontrol():
     if 'userid' not in session:
         return redirect('./') #no form data is carried across using 'dot/'
-    print(session['view'])
     customerdetails = ""
     countitmes = ""
     customeritems = ""
@@ -100,9 +108,53 @@ def checkout():
 
 @app.route('/updateusers', methods=['GET','POST'])
 def updateusers():
+    if 'userid' not in session or session['permission'] != "admin":
+        return redirect('./')
+    users = ""
+    update = ""
+    if session['usersearch'] != "":
+        name = "%" + session['usersearch'] + "%"
+        users = database.ViewQueryHelper("SELECT userid, fullname, phone, permission, email, password FROM users WHERE fullname LIKE ?",(name,))
+    return render_template("updateusers.html", session = session, users = users, update = update)
+
+@app.route('/usersearch', methods=['GET','POST'])
+def usersearch():
     if 'userid' not in session:
         return redirect('./')
-    return render_template("updateusers.html")
+    session['searchid'] = ""
+    name = request.form['username']
+    parts = name.split(" ")
+    name = ""
+    for part in parts:
+        part[0].upper()
+        part[1:-1].lower
+        name = name + part + " "
+    session['usersearch'] = name.strip()
+    return redirect('/updateusers')
+
+app.route('/userupdate', methods=['GET','POST'])
+def userupdate():
+    session['usersearch'] = ""
+    session['searchid'] = request.form['id']
+    return redirect('/updateusers')
+
+@app.route('/newuser', methods=['GET','POST'])
+def newuser():
+    name = request.form['name']
+    parts = name.split(" ")
+    name = ""
+    for part in parts:
+        part[0].upper()
+        part[1:-1].lower()
+        name = name + part + " "
+    name = name.strip()
+    ph = request.form['ph']
+    email = request.form['email']
+    pword = request.form['pwd']
+    role = request.form['role']
+    database.ModifyQueryHelper("INSERT INTO users (fullname, email, password, permission, phone) VALUES (?,?,?,?,?);",(name, email, pword, role, ph))
+    flash("New user added")
+    return redirect('/updateusers')
 
 #dashboard
 @app.route('/sensorview', methods=['GET','POST'])
