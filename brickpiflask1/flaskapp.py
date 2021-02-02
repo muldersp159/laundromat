@@ -31,6 +31,7 @@ def index():
             session['fullname'] = row['fullname']
             session['permission'] = row['permission']
             session['view'] = "all"
+            session['updatetype'] = ""
             session['usersearch'] = ""
             session['searchid'] = ""
             return redirect('./missioncontrol')
@@ -45,8 +46,8 @@ def index():
 def dataselection():
     if 'userid' not in session:
         return redirect('./')
-    #putting type of data user wants to see into session
-    session['customerid'] = request.form['customerselect']
+    #putting which user they want to see into session
+    session['customerid'] = request.form['custsel']
     print("customer " + str(session['customerid']) + " seleced")
     return redirect('/missioncontrol')
 
@@ -106,6 +107,26 @@ def checkout():
     database.ModifyQueryHelper("INSERT INTO reads (epc, orderid, checkout, rfidstrength) VALUES (?,?,?,?);",(epc, orderid, datetime.datetime.now(), rfidstrength))
 '''
 
+#update users code until "user data" route
+
+@app.route('/new', methods=['GET','POST'])
+def new():
+    session['updatetype'] = "new"
+    session['usersearch'] = ""
+    session['searchid'] = ""
+    return redirect('/updateusers')
+
+@app.route('/select', methods=['GET','POST'])
+def select():
+    session['updatetype'] = "select"
+    session['usersearch'] = ""
+    return redirect('/updateusers')
+
+@app.route('/update', methods=['GET','POST'])
+def update():
+    session['updatetype'] = "update"
+    return redirect('/updateusers')
+
 @app.route('/updateusers', methods=['GET','POST'])
 def updateusers():
     if 'userid' not in session or session['permission'] != "admin":
@@ -115,6 +136,8 @@ def updateusers():
     if session['usersearch'] != "":
         name = "%" + session['usersearch'] + "%"
         users = database.ViewQueryHelper("SELECT userid, fullname, phone, permission, email, password FROM users WHERE fullname LIKE ?",(name,))
+    if session['searchid'] != "":
+        update = database.ViewQueryHelper("SELECT userid, fullname, phone, permission, email, password FROM users WHERE userid LIKE ?",(session['searchid'],))[0]
     return render_template("updateusers.html", session = session, users = users, update = update)
 
 @app.route('/usersearch', methods=['GET','POST'])
@@ -123,16 +146,10 @@ def usersearch():
         return redirect('./')
     session['searchid'] = ""
     name = request.form['username']
-    parts = name.split(" ")
-    name = ""
-    for part in parts:
-        part[0].upper()
-        part[1:-1].lower
-        name = name + part + " "
     session['usersearch'] = name.strip()
     return redirect('/updateusers')
 
-app.route('/userupdate', methods=['GET','POST'])
+@app.route('/userupdate', methods=['GET','POST'])
 def userupdate():
     session['usersearch'] = ""
     session['searchid'] = request.form['id']
@@ -140,14 +157,7 @@ def userupdate():
 
 @app.route('/newuser', methods=['GET','POST'])
 def newuser():
-    name = request.form['name']
-    parts = name.split(" ")
-    name = ""
-    for part in parts:
-        part[0].upper()
-        part[1:-1].lower()
-        name = name + part + " "
-    name = name.strip()
+    name = request.form['name'].strip()
     ph = request.form['ph']
     email = request.form['email']
     pword = request.form['pwd']
@@ -155,6 +165,21 @@ def newuser():
     database.ModifyQueryHelper("INSERT INTO users (fullname, email, password, permission, phone) VALUES (?,?,?,?,?);",(name, email, pword, role, ph))
     flash("New user added")
     return redirect('/updateusers')
+    
+@app.route('/userdata', methods=['GET','POST'])
+def userdata():
+    name = request.form['name'].strip()
+    ph = request.form['ph']
+    email = request.form['email']
+    pword = request.form['pwd']
+    role = request.form['role']
+    uid = request.form['id']
+    database.ModifyQueryHelper("UPDATE users SET fullname = ?, email = ?, password = ?, permission = ?, phone = ? WHERE userid = ?;",(name, email, pword, role, ph, uid))
+    flash("User data updated")
+    return redirect('/updateusers')
+
+
+
 
 #dashboard
 @app.route('/sensorview', methods=['GET','POST'])

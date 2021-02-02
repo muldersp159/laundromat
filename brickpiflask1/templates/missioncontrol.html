@@ -66,12 +66,12 @@
           <form action='/dataselection' method="POST">
             <div class="form-group">
                 <label for="exampleInputEmail1">Select A Customer</label>
-                    <select name="customerselect" class="form-control" id="stateinput">
+                    <select name="custsel" class="form-control" id="custsel">
                       {% for customer in customerdetails %}
-                          <option value={{customer['customerid']}}>{{customer['fullname']}}</option>
+                          <option value={{customer['userid']}}>{{customer['fullname']}}</option>
                       {% endfor %}
                     </select>
-                </div>
+              </div>
             <input class="btn btn-info" type="submit" value="See Data From This Customer">
           </form>
         {% else %}
@@ -116,7 +116,7 @@
               {% endfor %}
             </table>
           {% else %}
-            <h3>{{customerinfo}}</h3> <!-- shows "customer has no items" -->
+            <h3>{{"customer has no items"}}</h3> <!-- shows "customer has no items" -->
           {% endif %}
         {% endif %}
       {% endif %}

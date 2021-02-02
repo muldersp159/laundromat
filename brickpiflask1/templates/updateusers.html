@@ -6,13 +6,16 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
     <script>
-        view = ""
         function newuser() {
-            view = "new"
+            location.replace("/new")
+            
+        }
+        function selectuser(){
+            location.replace("/select")
+            
         }
         function updateuser(){
-            view = "update"
-            session['usersearch'] = ""
+            location.replace("/update")
         }
     </script>
 {% endblock %}
@@ -21,42 +24,44 @@
     <h2>Update Users</h2>
     <div class="container">
         <button type="button" class="btn" onclick="newuser()">New User</button>
-        <button type="button" class="btn" onclick="updateuser()">Update User</button> 
+        <button type="button" class="btn" onclick="selectuser()">Update User</button> 
     </div>
-    {% if view == "new" %}
+    {% if session['updatetype'] == "new" %}
         <div class="container">
             <form class="form-horizontal" action="/newuser" method="POST">
                 <div class="form-group">
                     <label class="control-label col-sm-2" for="name">Full Name:</label>
                     <div class="col-sm-10">
-                    <input type="text" class="form-control" id="name" placeholder="Enter their full name" name="name">
+                        <input type="text" class="form-control" id="name" placeholder="Enter their full name" name="name">
                     </div>
                 </div>
                 <div class="form-group">
                     <label class="control-label col-sm-2" for="ph">Phone:</label>
                     <div class="col-sm-10">
-                    <input type="email" class="form-control" id="ph" placeholder="Enter phone number" name="ph">
+                        <input type="text" class="form-control" id="ph" placeholder="Enter phone number" name="ph">
                     </div>
                 </div>
                 <div class="form-group">
                     <label class="control-label col-sm-2" for="email">Email:</label>
                     <div class="col-sm-10">
-                    <input type="email" class="form-control" id="email" placeholder="Enter email" name="email">
+                        <input type="email" class="form-control" id="email" placeholder="Enter email" name="email">
                     </div>
                 </div>
                 <div class="form-group">
                     <label class="control-label col-sm-2" for="pwd">Password:</label>
                     <div class="col-sm-10">          
-                    <input type="password" class="form-control" id="pwd" placeholder="Enter password" name="pwd">
+                        <input type="password" class="form-control" id="pwd" placeholder="Enter password" name="pwd">
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="control-label col-sm-2" for="role">Select A Role</label>
-                    <select name="role" class="form-control" id="role">
-                        <option value="admin">Admin</option>
-                        <option value="staff">Staff</option>
-                        <option value="customer">Customer</option>
-                    </select>
+                    <label class="control-label col-sm-2" for="role">Select A Role:</label>
+                    <div class="col-sm-10"></div>
+                        <select name="role" class="form-control" id="role">
+                            <option value="admin">Admin</option>
+                            <option value="staff">Staff</option>
+                            <option value="customer">Customer</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="form-group">        
                     <div class="col-sm-offset-2 col-sm-10">
@@ -67,15 +72,21 @@
         </div>
     {% endif %}
 
-    {% if view == "update" %}
-        <form class="form-horizontal" action="/usersearch" method="GET">
+    {% if session['updatetype'] == "select" %}
+        <form class="form-horizontal" action="/usersearch" method="POST">
             <div class="form-group">
                 <label class="control-label col-sm-2" for="name">User's Name:</label>
                 <div class="col-sm-10">
                 <input type="text" class="form-control" id="username" placeholder="Enter their full name" name="username">
                 </div>
             </div>
+            <div class="form-group">        
+                <div class="col-sm-offset-2 col-sm-10">
+                <button type="submit" class="btn btn-info">Submit</button>
+                </div>
+            </div>
         </form>
+        <br><br>
         {% if users != "" %}
             <table>
                 <tr>
@@ -85,7 +96,7 @@
                     <th>Select</th>
                 </tr>  
                 {% for user in users %}  
-                <form action="/userupdate" method="GET">
+                <form action="/userupdate" method="POST">
                     <input type="hidden" id="id" name="id" value={{user['userid']}}>
                     <td>{{user['fullname']}}</td> 
                     <td>{{user['email']}}</td>
@@ -95,6 +106,50 @@
                 {% endfor %}
             </table>
         {% endif %}
+    {% endif %}
+
+    {% if update != "" and session['updatetype'] == "select" %}
+        <form class="form-horizontal" action="/userdata" method="POST">
+            <input type="hidden" id="id" name="id" value={{update['userid']}}>
+            <div class="form-group">
+                <label class="control-label col-sm-2" for="name">Full Name:</label>
+                <div class="col-sm-10">
+                <input type="text" class="form-control" id="name" value={{update['fullname']}} name="name">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="control-label col-sm-2" for="ph">Phone:</label>
+                <div class="col-sm-10">
+                <input type="text" class="form-control" id="ph" value={{update['phone']}} name="ph">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="control-label col-sm-2" for="email">Email:</label>
+                <div class="col-sm-10">
+                <input type="email" class="form-control" id="email" value={{update['email']}} name="email">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="control-label col-sm-2" for="pwd">Password:</label>
+                <div class="col-sm-10">          
+                <input type="password" class="form-control" id="pwd" vlaue={{update['password']}} name="pwd">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="control-label col-sm-2" for="role">Select A Role</label>
+                <select name="role" class="form-control" id="role">
+                    <option value={{update['permission']}}>{{update['permission']}}</option>
+                    <option value="admin">Admin</option>
+                    <option value="staff">Staff</option>
+                    <option value="customer">Customer</option>
+                </select>
+            </div>
+            <div class="form-group">        
+                <div class="col-sm-offset-2 col-sm-10">
+                <button type="submit" class="btn btn-default">Submit</button>
+                </div>
+            </div>
+        </form>    
     {% endif %}
 
 {% endblock %}
