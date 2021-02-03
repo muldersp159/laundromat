@@ -80,23 +80,26 @@
         {% endif %}
 
         {% if customerinfo != "" %}
-          <p>Customer Info: {{customerinfo['fullname']}}</p>
-          <p>Address: {{customerinfo['address']}}</p>
-          <p>Phone Number: {{customerinfo['phone']}}</p>
-          <p>Email: {{customerinfo['email']}}</p>
+          <br><br>
+          <p>Customer Info For <b>{{customerinfo['fullname']}}</b></p>
+          <p>Address: <b>{{customerinfo['address']}}</b></p>
+          <p>Phone Number: <b>{{customerinfo['phone']}}</b></p>
+          <p>Email: <b>{{customerinfo['email']}}</b></p><br>
           {% if customeritems != "Customer Has No Unreturned Items" %}
             <p>The number of each type of item a customer has unteturned</p>
             <table>
                 <tr>
-                  <th>Number of Product</th>
                   <th>Product</th>
-                </tr>
-                {% for itemgroup in numcustomeritems %}
-                  <tr>
-                    <td>{{itemgroup['Amount']}}</td>
+                  {% for itemgroup in numcustomeritems %}
                     <td>{{itemgroup['Product']}}</td>
-                  </tr>
-                {% endfor %}
+                  {% endfor %}
+                </tr>
+                <tr>
+                  <th>Number of Product</th>
+                  {% for itemgroup in numcustomeritems %}
+                    <td>{{itemgroup['Amount']}}</td>
+                  {% endfor %}
+                </tr>
             </table>
             <br><br>
             
@@ -116,7 +119,7 @@
               {% endfor %}
             </table>
           {% else %}
-            <h3>{{"customer has no items"}}</h3> <!-- shows "customer has no items" -->
+            <h5>{{"customer has no items"}}</h5> <!-- shows "customer has no items" -->
           {% endif %}
         {% endif %}
       {% endif %}

@@ -1,8 +1,10 @@
-from flask import Flask, render_template, jsonify, redirect, request, session, flash
+from flask import Flask, render_template, jsonify, redirect, request, session, flash, url_for
 import logging #allow loggings
 import time, sys, json
 from databaseinterface import DatabaseHelper
 from datetime import datetime
+import os
+from werkzeug.utils import secure_filename
 
 #Create a way to interact with database
 database = DatabaseHelper('laundromat.sqlite')
@@ -12,9 +14,12 @@ app = Flask(__name__)
 SECRET_KEY = 'my random key can be anything' #this is used for encrypting sessions
 app.config.from_object(__name__) #Set app configuration using above SETTINGS
 database.set_log(app.logger) #set the logger inside the database
+app.config['UPLOAD_FOLDER'] = "/reads"
+ALLOWED_EXTENSTIONS = {'csv'}
 
+def allowed_file(filename):
+    return "." in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSTIONS
 
-#Request Handlers ---------------------------------------------
 #login
 @app.route('/', methods=['GET','POST'])
 def index():
@@ -23,7 +28,7 @@ def index():
     if request.method == "POST":  #if form data has been sent
         email = request.form['email']   #get the form field with the name 
         password = request.form['password']
-        # TODO - need to make sure only one user is able to login at a time...
+        # TODO - need to make sure only one user is able to login at a time... how, idk
         userdetails = database.ViewQueryHelper("SELECT * FROM users WHERE email = ? AND password = ?",(email,password,))
         if len(userdetails) != 0:  #rows have been found
             row = userdetails[0] #userdetails is a list of dictionaries
@@ -34,6 +39,9 @@ def index():
             session['updatetype'] = ""
             session['usersearch'] = ""
             session['searchid'] = ""
+            session['custname'] = ""
+            session['cid'] = ""
+            session['inout'] = ""
             return redirect('./missioncontrol')
         else:
             flash("Sorry no user found, password or username incorrect")
@@ -41,12 +49,14 @@ def index():
         flash("No data submitted")
     return render_template('index.html')
 
+#main page vvvvvv
 #triggered when a user selects which customer they want to view
 @app.route('/dataselection', methods=['GET','POST'])
 def dataselection():
     if 'userid' not in session:
         return redirect('./')
     #putting which user they want to see into session
+    session['view'] = "customer"
     session['customerid'] = request.form['custsel']
     print("customer " + str(session['customerid']) + " seleced")
     return redirect('/missioncontrol')
@@ -83,18 +93,20 @@ def missioncontrol():
         countitmes = database.ViewQueryHelper("SELECT COUNT(reads.epc) AS Amount, abbreviations.full AS Product FROM reads, abbreviations, orders, users, tags WHERE reads.epc = tags.epc AND tags.type = abbreviations.abbreviation GROUP BY abbreviations.full ORDER BY abbreviations.full ASC;") 
         if len(allitems) == 0:
             allitems = "no items"
-    elif session['view'] == "customers": #get quick list of customer info to be used in customer selection
+    if session['view'] == "customers" or session['view'] == "customer": #get quick list of customer info to be used in customer selection
         customerdetails = database.ViewQueryHelper("SELECT userid, fullname FROM users WHERE permission = 'customer';")
         if len(customerdetails) == 0:
             customerdetails = "No Past Customers"
-    elif session['view'] == "customer": #get details of a specific customer
+    if session['view'] == "customer": #get details of a specific customer
         customeritems = database.ViewQueryHelper("SELECT reads.epc AS EPC, abbreviations.full AS Product, reads.checkout AS Checkout FROM reads, abbreviations, orders, users, tags WHERE reads.orderid = orders.orderid AND orders.customerid = users.userid AND reads.epc = tags.epc AND tags.type = abbreviations.abbreviation AND reads.return = 'NA' AND users.userid = ? ORDER BY abbreviations.full ASC, reads.epc;",(session['customerid'],))
         numcustomeritems = database.ViewQueryHelper("SELECT COUNT(reads.epc) AS Amount, abbreviations.full AS Product FROM reads, abbreviations, orders, users, tags WHERE reads.orderid = orders.orderid AND orders.customerid = users.userid AND reads.epc = tags.epc AND tags.type = abbreviations.abbreviation AND reads.return = 'NA' AND users.userid = ? GROUP BY abbreviations.full ORDER BY abbreviations.full ASC;",(session['customerid'],))
-        customerinfo = database.ViewQueryHelper("SELECT fullname, phone, address, email FROM users WHERE userid = ?",(session['customerid'],))
+        customerinfo = database.ViewQueryHelper("SELECT fullname, phone, email FROM users WHERE userid = ?",(session['customerid'],))[0]
         if len(customeritems) == 0:
             customeritems = "Customer Has No Unreturned Items"
-    print("checking if refreshing page")
+        print("test")
     return render_template("missioncontrol.html", customerdetails = customerdetails, customeritems = customeritems, numcustomeritems = numcustomeritems, allitems = allitems, customerinfo = customerinfo, session = session, countitems = countitmes)
+
+#main page ^^^^^
 
 '''
 @app.route('/checkin', methods=['GET','POST'])
@@ -107,7 +119,9 @@ def checkout():
     database.ModifyQueryHelper("INSERT INTO reads (epc, orderid, checkout, rfidstrength) VALUES (?,?,?,?);",(epc, orderid, datetime.datetime.now(), rfidstrength))
 '''
 
-#update users code until "user data" route
+
+
+#update users code vvvvvvv
 
 @app.route('/new', methods=['GET','POST'])
 def new():
@@ -137,7 +151,7 @@ def updateusers():
         name = "%" + session['usersearch'] + "%"
         users = database.ViewQueryHelper("SELECT userid, fullname, phone, permission, email, password FROM users WHERE fullname LIKE ?",(name,))
     if session['searchid'] != "":
-        update = database.ViewQueryHelper("SELECT userid, fullname, phone, permission, email, password FROM users WHERE userid LIKE ?",(session['searchid'],))[0]
+        update = database.ViewQueryHelper("SELECT userid, fullname, phone, permission, email, password FROM users WHERE userid = ?",(session['searchid'],))[0]
     return render_template("updateusers.html", session = session, users = users, update = update)
 
 @app.route('/usersearch', methods=['GET','POST'])
@@ -178,28 +192,83 @@ def userdata():
     flash("User data updated")
     return redirect('/updateusers')
 
+#update users code ^^^^^^^
 
 
-
-#dashboard
-@app.route('/sensorview', methods=['GET','POST'])
-def sensorview():
-    if 'userid' not in session:
-        return redirect('./')
-    return render_template("sensorview.html")
-
-#map or table of fire and path data
+#logging item reads vvvv
 @app.route('/checkinout', methods=['GET','POST'])
-def map():
+def checkinout():
     if 'userid' not in session:
         return redirect('./') #no form data is carried across using 'dot/'
-    return render_template('checkinout.html')
+    customers = ""
+    selected = ""
+    if session['custname'] != "":
+        name = "%" + session['custname'] + "%"
+        customers = database.ViewQueryHelper("SELECT userid, fullname, phone, email FROM users WHERE permission = 'customer' AND fullname LIKE ?",(name,))
+    if session['cid'] != "":
+        selected = database.ViewQueryHelper("SELECT userid, fullname, phone, email FROM users WHERE permission = 'customer' AND userid = ?",(session['cid'],))[0]
+    return render_template('checkinout.html', customers = customers, selected = selected, session = session)
 
-#creates a route to get all the event data
-@app.route('/getallusers', methods=['GET','POST'])
-def getallusers():
-    results = database.ViewQueryHelper("SELECT * FROM users")
-    return jsonify([dict(row) for row in results]) #jsonify doesnt work with an SQLite.Row
+@app.route('/custsearch', methods=['GET','POST'])
+def custsearch():
+    session['cid'] = ""
+    name = request.form['custname']
+    session['custname'] = name
+    return redirect('/checkinout')
+
+@app.route('/custsel', methods=['GET','POST'])
+def custsel():
+    session['custname'] = ""
+    session['inout'] = ""
+    cid = request.form['cid']
+    session['cid'] = cid
+    return redirect('/checkinout')
+
+@app.route('/inout', methods=['GET','POST'])
+def inout():
+    session['inout'] = request.form['inout']
+    return redirect('/checkinout')
+
+@app.route('/order', methods=['GET','POST'])
+def order():
+    file = request.files['file']
+    cid = session['cid']
+    orderid = request.form['order']
+    inout = session['inout']
+    filename = ""
+    #checking not an emppty file submitted
+    if file.filename == "":
+        flash("No Selected File")
+        return redirect('/checkinout')
+    if file and allowed_file(file.filename):
+        filename = secure_filename(file.filename)
+        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+    line_count = 0
+    '''if inout == "out":
+        print("ik its out")
+        #test = database.ViewQueryHelper("SELECT * FROM orders WHERE orderid = ?;",(orderid,))
+        #if len(test) != 0:
+            #database.ModifyQueryHelper("INSERT INTO orders (orderid, customerid, commisioned) VALUES (?, ?, ?);",(orderid, cid, datetime.datetime.now()))
+    for row in csv_reader:
+        if line_count == 0:
+            pass
+        elif inout == "out":
+            print("checking out")
+            print(row)
+            #database.database.ModifyQueryHelper("INSERT INTO reads (epc, orderid, checkout, rfidstrength) VALUES (?,?,?,?);",(epc, orderid, datetime.datetime.now(), rfidstrength))
+            line_count += 1
+        elif inout == "in":
+            print("checking in")
+            print(row)
+            #orderid = database.ViewQueryHelper("SELECT orderid from reads WHERE epc = ? ORDER BY readid DESC",(epc,))[0]
+            #database.ModifyQueryHelper("UPDATE reads SET return = ? WHERE epc = ? AND orderid = ?;",(datetime.datetime.now(), epc, orderid))'''
+    session['custname'] = ""
+    session['inout'] = ""
+    session['cid'] = ""
+    flash("read saved")
+    return redirect('/checkinout')
+
+#loggin item reads ^^^^^
 
 #Shutdown the web server
 @app.route('/shutdown', methods=['GET','POST'])
