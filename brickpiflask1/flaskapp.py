@@ -14,7 +14,7 @@ app = Flask(__name__)
 SECRET_KEY = 'my random key can be anything' #this is used for encrypting sessions
 app.config.from_object(__name__) #Set app configuration using above SETTINGS
 database.set_log(app.logger) #set the logger inside the database
-app.config['UPLOAD_FOLDER'] = "/reads"
+app.config['UPLOAD_FOLDER'] = "\\laundromat\\brickpiflask1\\reads"
 ALLOWED_EXTENSTIONS = {'csv'}
 
 def allowed_file(filename):
@@ -237,12 +237,14 @@ def order():
     inout = session['inout']
     filename = ""
     #checking not an emppty file submitted
+    # If the user does not select a file, the browser submits an
+    # empty file without a filename.
     if file.filename == "":
         flash("No Selected File")
         return redirect('/checkinout')
     if file and allowed_file(file.filename):
         filename = secure_filename(file.filename)
-        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        file.save(filename)
     line_count = 0
     '''if inout == "out":
         print("ik its out")

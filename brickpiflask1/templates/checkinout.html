@@ -57,7 +57,7 @@
                     </div>
                 </form>
                 {% if session['inout'] != "" %}
-                    <form class="form-horizontal" action="/order" method="POST">
+                    <form class="form-horizontal" action="/order" method="POST" enctype=multipart/form-data>
                         {% if session['inout'] == "out" %}
                             <div class="form-group">
                                 <label class="control-label col-sm-2" for="name">Order Number:</label>
