@@ -14,7 +14,7 @@ app = Flask(__name__)
 SECRET_KEY = 'my random key can be anything' #this is used for encrypting sessions
 app.config.from_object(__name__) #Set app configuration using above SETTINGS
 database.set_log(app.logger) #set the logger inside the database
-app.config['UPLOAD_FOLDER'] = "\\laundromat\\brickpiflask1\\reads"
+app.config['UPLOAD_FOLDER'] = r"D:\GitHub\laundromat\brickpiflask1\reads"
 ALLOWED_EXTENSTIONS = {'csv'}
 
 def allowed_file(filename):
@@ -244,26 +244,68 @@ def order():
         return redirect('/checkinout')
     if file and allowed_file(file.filename):
         filename = secure_filename(file.filename)
-        file.save(filename)
+        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+    file_location = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+
+    #extracting data from file
+    f = open(file_location, "r")
+    lines = f.splitline()
+    data = {}
+    headings = []
     line_count = 0
-    '''if inout == "out":
-        print("ik its out")
-        #test = database.ViewQueryHelper("SELECT * FROM orders WHERE orderid = ?;",(orderid,))
-        #if len(test) != 0:
-            #database.ModifyQueryHelper("INSERT INTO orders (orderid, customerid, commisioned) VALUES (?, ?, ?);",(orderid, cid, datetime.datetime.now()))
-    for row in csv_reader:
+    if "," in lines[0]:
+        headings = lines[0].split(",")
+        for heading in headings:
+            data[heading] = []
+        for line in lines:
+            pos = 0
+            if line_count != 0:
+                for column in line:
+                    data[headings[pos]].append(column)
+                    pos += 1
+            line_count += 0
+    else:
+        heading = lines[0]
+        for line in lines:
+            if line_count != 0:
+                data[heading].append(column)
+            line_count += 1
+
+    item_num = 0
+    if inout == "out":
+        #checking if order already in db, if not then make it
+        print("ik its checkout")
+        test = database.ViewQueryHelper("SELECT * FROM orders WHERE orderid = ?;",(orderid,))
+        if len(test) == 0:
+            database.ModifyQueryHelper("INSERT INTO orders (orderid, customerid, commisioned) VALUES (?, ?, ?);",(orderid, cid, datetime.datetime.now()))
+        for epc in data['EPC']:
+            #ensuring not double read occur
+            check = database.ViewQueryHelper("SELECT * FROM reads WHERE epc = ?, orderid = ? AND return = '';", (epc, orderid))
+            if len(check) == 0:
+                database.ModifyQueryHelper("INSERT INTO reads (epc, orderid, checkout) VALUES (?,?,?,);",(epc, orderid, datetime.datetime.now()))
+            item_num += 1
+
+    if inout == "in":
+        for epc in data['EPC']:
+                            orderid = database.ViewQueryHelper("SELECT orderid from reads WHERE epc = ? ORDER BY readid DESC",(epc,))[0]
+            database.ModifyQueryHelper("UPDATE reads SET return = ? WHERE epc = ? AND orderid = ?;",(datetime.datetime.now(), epc, orderid))
+
+    
+    '''for row in csv_reader:
         if line_count == 0:
             pass
         elif inout == "out":
             print("checking out")
             print(row)
-            #database.database.ModifyQueryHelper("INSERT INTO reads (epc, orderid, checkout, rfidstrength) VALUES (?,?,?,?);",(epc, orderid, datetime.datetime.now(), rfidstrength))
+            #database.ModifyQueryHelper("INSERT INTO reads (epc, orderid, checkout, rfidstrength) VALUES (?,?,?,?);",(epc, orderid, datetime.datetime.now(), rfidstrength))
             line_count += 1
         elif inout == "in":
             print("checking in")
             print(row)
             #orderid = database.ViewQueryHelper("SELECT orderid from reads WHERE epc = ? ORDER BY readid DESC",(epc,))[0]
             #database.ModifyQueryHelper("UPDATE reads SET return = ? WHERE epc = ? AND orderid = ?;",(datetime.datetime.now(), epc, orderid))'''
+
+
     session['custname'] = ""
     session['inout'] = ""
     session['cid'] = ""
