@@ -2,6 +2,7 @@
 {% block scripts %}
 {% endblock %}
 {% block content %}
+    <br>
     <table style="width:100%; padding:0;">
         <td style="width:60%; padding:0;" class="container">
             <form class="form-horizontal" action="/custsearch" method="POST">
@@ -18,7 +19,7 @@
                 </div>
             </form> <br><br>
             {% if customers != "" %}
-                <table>
+                <table class="table table-striped">
                     <tr>
                         <th>Name</th>
                         <th>Email</th>
@@ -41,7 +42,8 @@
             {% if session['cid'] != "" %}
                 <p>{{selected['fullname']}} was selected as the customer.</p>
                 <p>Phone: {{selected['phone']}}</p>
-                <p>Email: {{selected['emiail']}}</p><br><br>
+                <p>Email: {{selected['email']}}</p>
+                <p>Address: {{selected['address']}}</p><br><br>
                 <form class="form-horizontal" action="/inout" method="POST">
                     <div class="form-group">
                         <label for="exampleInputEmail1">In or Out</label>

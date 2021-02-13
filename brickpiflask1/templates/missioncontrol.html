@@ -1,6 +1,5 @@
 {% extends "layout.html" %}
 {% block scripts %}
-  <script src="/static/scripts/missioncontrol.js"></script>
   <script>
     function allitems() {
       location.replace("/allitems")
@@ -11,17 +10,14 @@
   </script>
 {% endblock %}
 {% block content %}
-<h2>TAV's Laundromat</h2><br/>
+<h2>Fresh Linen Services</h2><br/>
 <!-- <p>The buttons when clicked run a special script that can be used to send data to the server without a form (and the necessary page refresh). This helper script uses JSON (a method of sending complex data through text encoding).</p>
 <p>The helper function can be used as follows <b>JSONrequest</b>(/url, "POST",name_of_callback_function, {var1:"value1",var2:"value2"...})</p><p><i>The callback function receives a result object that contains response data.</i></p><p>A simpler call can be made: <b>JSONrequest</b>(/url, "POST") if you do not wish to send or receive data.</p> -->
 <div class="container">
-    <div class="row">
-        <h3 id="message"></h3>
-    </div>
     <div class="container">
-        <button type="button" class="btn" onclick="allitems()">All Itmes</button>
-        <button type="button" class="btn" onclick="selectcustomer()">Select A Customer</button> 
-    </div>
+        <button type="button" class="btn" onclick="allitems()" style="font-size: large;">All Itmes</button>
+        <button type="button" class="btn" onclick="selectcustomer()" style="font-size: large;">Select A Customer</button> 
+    </div><br><br>
     <div>
       {% if allitems != "" %}
         {% if allitems != "no items" %}
@@ -57,26 +53,47 @@
             {% endfor %}
           </table>
         {% else %}
-          <h6>Sorry, but there are no items listed in the database</h6>
+          <h4>Sorry, but there are no items listed in the database</h4>
         {% endif %}
       {% endif %}
+      
 
-      {% if customerdetails != "" %}
-        {% if customerdetails != "No Past Customers" %} <!-- only creates drop-down if customers returned -->
-          <form action='/dataselection' method="POST">
-            <div class="form-group">
-                <label for="exampleInputEmail1">Select A Customer</label>
-                    <select name="custsel" class="form-control" id="custsel">
-                      {% for customer in customerdetails %}
-                          <option value={{customer['userid']}}>{{customer['fullname']}}</option>
-                      {% endfor %}
-                    </select>
+      {% if session['view'] == "customers" or session['view'] == "customer" %}
+        <form action='/itemsearch' method="POST">
+          <div class="form-group">
+              <label class="control-label col-sm-2" for="name">User's Name:</label>
+              <div class="col-sm-10">
+              <input type="text" class="form-control" id="itemsearch" placeholder="Enter their full name" name="itemsearch" style="font-size: large;">
               </div>
-            <input class="btn btn-info" type="submit" value="See Data From This Customer">
-          </form>
-        {% else %}
-          <h6>{{customerdetails}}</h6>
-          <!-- shows "No Past Customers" -->
+          </div><br>
+          <div class="form-group">        
+              <div class="col-sm-offset-2 col-sm-10">
+              <button type="submit" class="btn btn-info" style="font-size: large;">Search</button>
+              </div>
+          </div>
+        </form> <br><br>
+        {% if customerdetails != "" %} <!-- only creates drop-down if customers returned -->
+          {% if customerdetails != "No Past Customers" %}
+            <table class="table table-striped">
+              <tr>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Phone</th>
+                  <th>Select</th>
+              </tr>  
+              {% for customer in customerdetails %}  
+                  <form action="/dataselection" method="POST">
+                      <input type="hidden" id="customerid" name="customerid" value={{customer['userid']}}>
+                      <td>{{customer['fullname']}}</td> 
+                      <td>{{customer['email']}}</td>
+                      <td>{{customer['phone']}}</td>
+                      <td><button type="submit" class="btn btn-default">Select</button></td>
+                  </form>
+              {% endfor %}
+            </table>
+          {% else %}
+            <h4>No Customers Found With That Name</h4>
+          {% endif %}
         {% endif %}
 
         {% if customerinfo != "" %}
@@ -104,7 +121,7 @@
             <br><br>
             
             <p>Every item a customer has unteturned</p>
-            <table>
+            <table class="table table-striped">
               <tr>
                 <th>EPC</th>
                 <th>Product</th>
@@ -119,7 +136,7 @@
               {% endfor %}
             </table>
           {% else %}
-            <h5>{{"customer has no items"}}</h5> <!-- shows "customer has no items" -->
+            <h4>Customer has no unreturned items</h4>
           {% endif %}
         {% endif %}
       {% endif %}

@@ -54,6 +54,12 @@
                     </div>
                 </div>
                 <div class="form-group">
+                    <label class="control-label col-sm-2" for="pwd">Address:</label>
+                    <div class="col-sm-10">          
+                        <input type="password" class="form-control" id="address" placeholder="Enter address" name="address">
+                    </div>
+                </div>
+                <div class="form-group">
                     <label class="control-label col-sm-2" for="role">Select A Role:</label>
                     <div class="col-sm-10"></div>
                         <select name="role" class="form-control" id="role">
@@ -88,7 +94,7 @@
         </form>
         <br><br>
         {% if users != "" %}
-            <table>
+            <table class="table table-striped">
                 <tr>
                     <th>Name</th>
                     <th>Email</th>
@@ -133,6 +139,12 @@
                 <label class="control-label col-sm-2" for="pwd">Password:</label>
                 <div class="col-sm-10">          
                 <input type="password" class="form-control" id="pwd" vlaue={{update['password']}} name="pwd">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="control-label col-sm-2" for="pwd">Address:</label>
+                <div class="col-sm-10">          
+                <input type="password" class="form-control" id="address" vlaue={{update['address']}} name="address">
                 </div>
             </div>
             <div class="form-group">

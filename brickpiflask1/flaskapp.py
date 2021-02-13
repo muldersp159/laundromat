@@ -42,6 +42,7 @@ def index():
             session['custname'] = ""
             session['cid'] = ""
             session['inout'] = ""
+            session['itemsearch'] = ""
             return redirect('./missioncontrol')
         else:
             flash("Sorry no user found, password or username incorrect")
@@ -50,15 +51,25 @@ def index():
     return render_template('index.html')
 
 #main page vvvvvv
-#triggered when a user selects which customer they want to view
+#triggered when a user searches for customer they want to view
+@app.route('/itemsearch', methods=['GET','POST'])
+def itemsearch():
+    if 'userid' not in session:
+        return redirect('./')
+    #putting which user they want to search into session
+    session['customerid'] = ""
+    name = "%" + request.form['itemsearch'] + "%"
+    session['itemsearch'] = name
+    return redirect('/missioncontrol')
+
+#selecting a specific customer
 @app.route('/dataselection', methods=['GET','POST'])
 def dataselection():
     if 'userid' not in session:
         return redirect('./')
-    #putting which user they want to see into session
     session['view'] = "customer"
-    session['customerid'] = request.form['custsel']
-    print("customer " + str(session['customerid']) + " seleced")
+    session['itemsearch'] = ""
+    session['customerid'] = request.form['customerid']
     return redirect('/missioncontrol')
 
 @app.route('/allcustomers', methods=['GET','POST'])
@@ -67,6 +78,8 @@ def allcustomers():
         return redirect('./')
     #updating the session when the user selects that they want to pick form a customer to view data
     session['view'] = "customers"
+    session['customerid'] = ""
+    session['itemsearch'] = ""
     return redirect('/missioncontrol')
 
 @app.route('/allitems', methods=['GET','POST'])
@@ -93,17 +106,17 @@ def missioncontrol():
         countitmes = database.ViewQueryHelper("SELECT COUNT(reads.epc) AS Amount, abbreviations.full AS Product FROM reads, abbreviations, orders, users, tags WHERE reads.epc = tags.epc AND tags.type = abbreviations.abbreviation GROUP BY abbreviations.full ORDER BY abbreviations.full ASC;") 
         if len(allitems) == 0:
             allitems = "no items"
-    if session['view'] == "customers" or session['view'] == "customer": #get quick list of customer info to be used in customer selection
-        customerdetails = database.ViewQueryHelper("SELECT userid, fullname FROM users WHERE permission = 'customer';")
-        if len(customerdetails) == 0:
-            customerdetails = "No Past Customers"
+    if session['view'] == "customers": #get quick list of customer info to be used in customer selection
+        if session['itemsearch'] != "":
+            customerdetails = database.ViewQueryHelper("SELECT userid, fullname, phone, email FROM users WHERE permission = 'customer' AND fullname LIKE ?;",(session['itemsearch'],))
+            if len(customerdetails) == 0:
+                customerdetails = "No Past Customers"
     if session['view'] == "customer": #get details of a specific customer
         customeritems = database.ViewQueryHelper("SELECT reads.epc AS EPC, abbreviations.full AS Product, reads.checkout AS Checkout FROM reads, abbreviations, orders, users, tags WHERE reads.orderid = orders.orderid AND orders.customerid = users.userid AND reads.epc = tags.epc AND tags.type = abbreviations.abbreviation AND reads.return = 'NA' AND users.userid = ? ORDER BY abbreviations.full ASC, reads.epc;",(session['customerid'],))
         numcustomeritems = database.ViewQueryHelper("SELECT COUNT(reads.epc) AS Amount, abbreviations.full AS Product FROM reads, abbreviations, orders, users, tags WHERE reads.orderid = orders.orderid AND orders.customerid = users.userid AND reads.epc = tags.epc AND tags.type = abbreviations.abbreviation AND reads.return = 'NA' AND users.userid = ? GROUP BY abbreviations.full ORDER BY abbreviations.full ASC;",(session['customerid'],))
-        customerinfo = database.ViewQueryHelper("SELECT fullname, phone, email FROM users WHERE userid = ?",(session['customerid'],))[0]
+        customerinfo = database.ViewQueryHelper("SELECT fullname, phone, email, address FROM users WHERE userid = ?",(session['customerid'],))[0]
         if len(customeritems) == 0:
             customeritems = "Customer Has No Unreturned Items"
-        print("test")
     return render_template("missioncontrol.html", customerdetails = customerdetails, customeritems = customeritems, numcustomeritems = numcustomeritems, allitems = allitems, customerinfo = customerinfo, session = session, countitems = countitmes)
 
 #main page ^^^^^
@@ -151,7 +164,7 @@ def updateusers():
         name = "%" + session['usersearch'] + "%"
         users = database.ViewQueryHelper("SELECT userid, fullname, phone, permission, email, password FROM users WHERE fullname LIKE ?",(name,))
     if session['searchid'] != "":
-        update = database.ViewQueryHelper("SELECT userid, fullname, phone, permission, email, password FROM users WHERE userid = ?",(session['searchid'],))[0]
+        update = database.ViewQueryHelper("SELECT userid, fullname, phone, permission, email, password, address FROM users WHERE userid = ?",(session['searchid'],))[0]
     return render_template("updateusers.html", session = session, users = users, update = update)
 
 @app.route('/usersearch', methods=['GET','POST'])
@@ -176,7 +189,8 @@ def newuser():
     email = request.form['email']
     pword = request.form['pwd']
     role = request.form['role']
-    database.ModifyQueryHelper("INSERT INTO users (fullname, email, password, permission, phone) VALUES (?,?,?,?,?);",(name, email, pword, role, ph))
+    address = request.form['address']
+    database.ModifyQueryHelper("INSERT INTO users (fullname, email, password, permission, phone, address) VALUES (?,?,?,?,?,?);",(name, email, pword, role, ph, address))
     flash("New user added")
     return redirect('/updateusers')
     
@@ -188,7 +202,8 @@ def userdata():
     pword = request.form['pwd']
     role = request.form['role']
     uid = request.form['id']
-    database.ModifyQueryHelper("UPDATE users SET fullname = ?, email = ?, password = ?, permission = ?, phone = ? WHERE userid = ?;",(name, email, pword, role, ph, uid))
+    address = request.form['address']
+    database.ModifyQueryHelper("UPDATE users SET fullname = ?, email = ?, password = ?, permission = ?, phone = ?, address = ? WHERE userid = ?;",(name, email, pword, role, ph, uid, address))
     flash("User data updated")
     return redirect('/updateusers')
 
@@ -206,7 +221,7 @@ def checkinout():
         name = "%" + session['custname'] + "%"
         customers = database.ViewQueryHelper("SELECT userid, fullname, phone, email FROM users WHERE permission = 'customer' AND fullname LIKE ?",(name,))
     if session['cid'] != "":
-        selected = database.ViewQueryHelper("SELECT userid, fullname, phone, email FROM users WHERE permission = 'customer' AND userid = ?",(session['cid'],))[0]
+        selected = database.ViewQueryHelper("SELECT userid, fullname, phone, email, address FROM users WHERE permission = 'customer' AND userid = ?",(session['cid'],))[0]
     return render_template('checkinout.html', customers = customers, selected = selected, session = session)
 
 @app.route('/custsearch', methods=['GET','POST'])
@@ -236,6 +251,7 @@ def order():
     orderid = request.form['order']
     inout = session['inout']
     filename = ""
+    file_location = ""
     #checking not an emppty file submitted
     # If the user does not select a file, the browser submits an
     # empty file without a filename.
@@ -244,12 +260,11 @@ def order():
         return redirect('/checkinout')
     if file and allowed_file(file.filename):
         filename = secure_filename(file.filename)
-        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-    file_location = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-
+        file_location = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        file.save(file_location)
     #extracting data from file
-    f = open(file_location, "r")
-    lines = f.splitline()
+    f = open(file_location, "r").read()
+    lines = f.split('\n')
     data = {}
     headings = []
     line_count = 0
@@ -258,57 +273,46 @@ def order():
         for heading in headings:
             data[heading] = []
         for line in lines:
-            pos = 0
             if line_count != 0:
+                pos = 0
                 for column in line:
                     data[headings[pos]].append(column)
                     pos += 1
             line_count += 0
     else:
-        heading = lines[0]
+        heading = lines[0][3:]
+        data[heading] = []
         for line in lines:
             if line_count != 0:
-                data[heading].append(column)
+                data[heading].append(line)
             line_count += 1
-
+    
+    #performing different process depending on in our out allows for scans in to be of mixed orders
     item_num = 0
     if inout == "out":
         #checking if order already in db, if not then make it
-        print("ik its checkout")
         test = database.ViewQueryHelper("SELECT * FROM orders WHERE orderid = ?;",(orderid,))
         if len(test) == 0:
-            database.ModifyQueryHelper("INSERT INTO orders (orderid, customerid, commisioned) VALUES (?, ?, ?);",(orderid, cid, datetime.datetime.now()))
+            database.ModifyQueryHelper("INSERT INTO orders (orderid, customerid, commisioned) VALUES (?, ?, ?);",(orderid, cid, datetime.now()))
         for epc in data['EPC']:
-            #ensuring not double read occur
-            check = database.ViewQueryHelper("SELECT * FROM reads WHERE epc = ?, orderid = ? AND return = '';", (epc, orderid))
-            if len(check) == 0:
-                database.ModifyQueryHelper("INSERT INTO reads (epc, orderid, checkout) VALUES (?,?,?,);",(epc, orderid, datetime.datetime.now()))
-            item_num += 1
+            if epc != "":
+                #ensuring not double read occur
+                check = database.ViewQueryHelper("SELECT * FROM reads WHERE epc = ? AND orderid = ?;", (epc, orderid))
+                if len(check) != 0: #rows have been found, therefore that tag has already been logged to that order
+                    pass
+                else:
+                    database.ModifyQueryHelper("INSERT INTO reads (epc, orderid, checkout) VALUES (?,?,?);",(epc, orderid, datetime.now()))
+                item_num += 1
 
     if inout == "in":
         for epc in data['EPC']:
-                            orderid = database.ViewQueryHelper("SELECT orderid from reads WHERE epc = ? ORDER BY readid DESC",(epc,))[0]
-            database.ModifyQueryHelper("UPDATE reads SET return = ? WHERE epc = ? AND orderid = ?;",(datetime.datetime.now(), epc, orderid))
-
-    
-    '''for row in csv_reader:
-        if line_count == 0:
-            pass
-        elif inout == "out":
-            print("checking out")
-            print(row)
-            #database.ModifyQueryHelper("INSERT INTO reads (epc, orderid, checkout, rfidstrength) VALUES (?,?,?,?);",(epc, orderid, datetime.datetime.now(), rfidstrength))
-            line_count += 1
-        elif inout == "in":
-            print("checking in")
-            print(row)
-            #orderid = database.ViewQueryHelper("SELECT orderid from reads WHERE epc = ? ORDER BY readid DESC",(epc,))[0]
-            #database.ModifyQueryHelper("UPDATE reads SET return = ? WHERE epc = ? AND orderid = ?;",(datetime.datetime.now(), epc, orderid))'''
-
-
+            orderid = database.ViewQueryHelper("SELECT orderid from reads WHERE epc = ? ORDER BY readid DESC",(epc,))[0]
+            database.ModifyQueryHelper("UPDATE reads SET return = ? WHERE epc = ? AND orderid = ?;",(datetime.now(), epc, orderid))
     session['custname'] = ""
     session['inout'] = ""
     session['cid'] = ""
+    if file_location != "":
+        os.remove(file_location) # deleting temp file now that data saved
     flash("read saved")
     return redirect('/checkinout')
 
