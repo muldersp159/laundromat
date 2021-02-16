@@ -156,7 +156,9 @@ def update():
 
 @app.route('/updateusers', methods=['GET','POST'])
 def updateusers():
-    if 'userid' not in session or session['permission'] != "admin":
+    if 'userid' not in session:
+        return redirect('./')
+    if session['permission'] != "admin":
         return redirect('./')
     users = ""
     update = ""
@@ -288,7 +290,6 @@ def order():
             line_count += 1
     
     #performing different process depending on in our out allows for scans in to be of mixed orders
-    item_num = 0
     if inout == "out":
         #checking if order already in db, if not then make it
         test = database.ViewQueryHelper("SELECT * FROM orders WHERE orderid = ?;",(orderid,))
@@ -302,7 +303,6 @@ def order():
                     pass
                 else:
                     database.ModifyQueryHelper("INSERT INTO reads (epc, orderid, checkout) VALUES (?,?,?);",(epc, orderid, datetime.now()))
-                item_num += 1
 
     if inout == "in":
         for epc in data['EPC']:
@@ -317,6 +317,81 @@ def order():
     return redirect('/checkinout')
 
 #loggin item reads ^^^^^
+
+@app.route('/newtags', methods=['GET','POST'])
+def newtags():
+    if 'userid' not in session:
+        return redirect('./')
+    if session['permission'] != "admin":
+        return redirect('./')
+    items = database.ViewQueryHelper("SELECT * FROM abbreviations")
+    return render_template('newtags.html', items = items)
+
+@app.route('/uploadtags', methods=['GET','POST'])
+def uploadtags():
+    if 'userid' not in session:
+        return redirect('./')
+    if session['permission'] != "admin":
+        return redirect('./')
+    file = request.files['file']
+    itemtype = request.form['type']
+    filename = ""
+    file_location = ""
+    #checking not an emppty file submitted
+    # If the user does not select a file, the browser submits an
+    # empty file without a filename.
+    if file.filename == "":
+        flash("No Selected File")
+        return redirect('/newtags')
+    filename = file.filename
+    if " " in filename:
+        filenameparts = file.filename.split(" ")
+        filename = ""
+        for part in filenameparts:
+            filename = filename + part
+        print(filename)
+    
+    if file and allowed_file(filename):
+        print("test2")
+        filename = secure_filename(filename)
+        file_location = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        file.save(file_location)
+    else:
+        flash("invalid file name")
+        return redirect('/newtags')
+    #extracting data from file
+    f = open(file_location, "r").read()
+    f.strip("\n")
+    lines = f.split('\n')
+    data = {}
+    headings = []
+    line_count = 0
+    if "," in lines[0]:
+        headings = lines[0].split(",")
+        for heading in headings:
+            data[heading] = []
+        for line in lines:
+            if line_count != 0:
+                pos = 0
+                for column in line:
+                    data[headings[pos]].append(column)
+                    pos += 1
+            line_count += 0
+    else:
+        heading = lines[0]
+        print("heading" + heading)
+        data[heading] = []
+        for line in lines:
+            if line_count != 0:
+                data[heading].append(line)
+            line_count += 1
+    
+    for epc in data['EPC']:
+        if epc != "":
+            database.ModifyQueryHelper("INSERT INTO tags (epc, purchasedate, type) VALUES (?,?,?);",(epc, datetime.now(), itemtype))
+    flash(str(line_count) + " New tags uploaded to database")
+    return redirect('/newtags')
+    
 
 #Shutdown the web server
 @app.route('/shutdown', methods=['GET','POST'])

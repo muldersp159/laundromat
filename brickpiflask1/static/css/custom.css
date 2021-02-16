@@ -14,3 +14,11 @@ footer { margin-top:60px; }
     99%{    color:transparent;  }
     100%{   color: #000;    }
 }
+
+a{
+    {color: white;}
+}
+
+a:hover{
+    background-color: #8B0000;
+}

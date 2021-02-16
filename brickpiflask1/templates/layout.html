@@ -1,41 +1,41 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <title>Fresh Linen Services</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+
     <meta charset="UTF-8">
-    <title>BrickPiFlask</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
     <link rel="stylesheet" href="../static/css/custom.css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
     <script src="/static/scripts/jsonrequesthandler.js"></script>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
-    {% block scripts %}{% endblock %} <!-- Container for Scripts-->
+  
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
+    
 </head>
 
 <body style="padding:30px;font-size:16px;">
-        <nav class="navbar navbar-expand-lg navbar navbar-dark bg-danger">
-                <a href="/" class="navbar-brand">BrickPiFlask</a>
-                <button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#navbarCollapse2">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-        
-                <div class="collapse navbar-collapse" id="navbarCollapse2">
-                    <div class="navbar-nav">
-                        <a href="/missioncontrol" class="nav-item nav-link">Mission Control</a>
-                        <a href="/checkinout" class="nav-item nav-link">Check In/Out</a>
-                        <a href="/updateusers" class="nav-item nav-link">Update Users</a>
-                    </div>
-                </div>
-            </nav>
+        <nav class="navbar navbar-expand-lg navbar-dark bg-danger">
+            <div class="container-fluid">
+                <ul class="nav navbar-nav">
+                    <li class="active"><a href="/missioncontrol" class="nav-item nav-link" style="color:white;">View Tags</a></li>
+                    <li><a href="/checkinout" class="nav-item nav-link" style="color:white;">Check In/Out</a></li>
+                    <li><a href="/updateusers" class="nav-item nav-link" style="color:white;">Update Users</a></li>
+                    <li><a href="/newtags" class="nav-item nav-link" style="color:white;">New Tags</a></li>
+                    <li><a href="/logout" class="nav-item nav-link" style="color:white;">Log Out</a></li>
+                </ul>
+                <ul class="nav navbar-nav navbar-right">
+                  <li><a href="/logout" class="nav-item nav-link" style="color:white;"></a><span class="glyphicon glyphicon-log-in"></span> Logout</a></li>
+                </ul>
+            </div>
+        </nav>
 <br>
 
     {% block content %}{% endblock %} <!-- Container for Content -->
     <footer>
-        <a href="https://github.com/bradnielsen2981/brickpiflask">The full code can be found on Github</a>
         {% for message in get_flashed_messages() %}
         <div class='alert'>
             {{message}}
@@ -43,4 +43,5 @@
         {%endfor%}
     </footer>
 </body>
+{% block scripts %}{% endblock %} <!-- Container for Scripts-->
 </html>

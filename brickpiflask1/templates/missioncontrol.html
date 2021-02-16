@@ -15,8 +15,9 @@
 <p>The helper function can be used as follows <b>JSONrequest</b>(/url, "POST",name_of_callback_function, {var1:"value1",var2:"value2"...})</p><p><i>The callback function receives a result object that contains response data.</i></p><p>A simpler call can be made: <b>JSONrequest</b>(/url, "POST") if you do not wish to send or receive data.</p> -->
 <div class="container">
     <div class="container">
-        <button type="button" class="btn" onclick="allitems()" style="font-size: large;">All Itmes</button>
-        <button type="button" class="btn" onclick="selectcustomer()" style="font-size: large;">Select A Customer</button> 
+        <button type="button" class="btn btn-info" onclick="allitems()" style="font-size: large;">All Itmes</button><br><br>
+
+        <button type="button" class="btn btn-info" onclick="selectcustomer()" style="font-size: large;">Select A Customer</button> 
     </div><br><br>
     <div>
       {% if allitems != "" %}
