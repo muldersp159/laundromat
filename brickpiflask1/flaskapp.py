@@ -96,28 +96,42 @@ def missioncontrol():
     if 'userid' not in session:
         return redirect('./') #no form data is carried across using 'dot/'
     customerdetails = ""
-    countitmes = ""
     customeritems = ""
     numcustomeritems = ""
     allitems = ""
+    countitems = []
     customerinfo = ""
     if session['view'] == "all": #selects all items and breaks them up as to whether they are checked out or not
-        allitems = database.ViewQueryHelper("SELECT reads.epc AS EPC, abbreviations.full AS Product, reads.checkout AS Checkout, reads.return AS Return FROM reads, abbreviations, orders, users, tags WHERE reads.epc = tags.epc AND tags.type = abbreviations.abbreviation ORDER BY reads.return DESC, abbreviations.full ASC, reads.epc;") 
-        countitmes = database.ViewQueryHelper("SELECT COUNT(reads.epc) AS Amount, abbreviations.full AS Product FROM reads, abbreviations, orders, users, tags WHERE reads.epc = tags.epc AND tags.type = abbreviations.abbreviation GROUP BY abbreviations.full ORDER BY abbreviations.full ASC;") 
+        allitems = database.ViewQueryHelper("SELECT tags.epc AS EPC, abbreviations.full AS Product FROM tags, abbreviations WHERE abbreviations.abbreviation = tags.type ORDER BY Product ASC;") 
+        producttotals = database.ViewQueryHelper("SELECT COUNT(tags.epc) AS Amount, abbreviations.full AS Product FROM tags, abbreviations WHERE abbreviations.abbreviation = tags.type GROUP BY Product ORDER BY Product ASC;") 
         if len(allitems) == 0:
             allitems = "no items"
+        if len(producttotals) != 0: #means that data was returned
+            for item in producttotals:
+                product = item['Product']
+                out = database.ViewQueryHelper("SELECT COUNT(reads.epc) AS Amount, abbreviations.full AS Product FROM reads, abbreviations, tags WHERE reads.epc = tags.epc AND tags.type = abbreviations.abbreviation AND reads.return = '' AND abbreviations.full = ? GROUP BY reads.return, abbreviations.full", (product,))
+                if len(out) == 0:
+                    out = 0
+                else:
+                    out = out[0]['Amount']
+                count = {}
+                count['Out'] = out
+                count['In'] = int(item['Amount']) - int(out)
+                count['Product'] = product
+                count['Total'] = item['Amount']
+                countitems.append(count)
     if session['view'] == "customers": #get quick list of customer info to be used in customer selection
         if session['itemsearch'] != "":
             customerdetails = database.ViewQueryHelper("SELECT userid, fullname, phone, email FROM users WHERE permission = 'customer' AND fullname LIKE ?;",(session['itemsearch'],))
             if len(customerdetails) == 0:
                 customerdetails = "No Past Customers"
     if session['view'] == "customer": #get details of a specific customer
-        customeritems = database.ViewQueryHelper("SELECT reads.epc AS EPC, abbreviations.full AS Product, reads.checkout AS Checkout FROM reads, abbreviations, orders, users, tags WHERE reads.orderid = orders.orderid AND orders.customerid = users.userid AND reads.epc = tags.epc AND tags.type = abbreviations.abbreviation AND reads.return = 'NA' AND users.userid = ? ORDER BY abbreviations.full ASC, reads.epc;",(session['customerid'],))
-        numcustomeritems = database.ViewQueryHelper("SELECT COUNT(reads.epc) AS Amount, abbreviations.full AS Product FROM reads, abbreviations, orders, users, tags WHERE reads.orderid = orders.orderid AND orders.customerid = users.userid AND reads.epc = tags.epc AND tags.type = abbreviations.abbreviation AND reads.return = 'NA' AND users.userid = ? GROUP BY abbreviations.full ORDER BY abbreviations.full ASC;",(session['customerid'],))
+        customeritems = database.ViewQueryHelper("SELECT reads.epc AS EPC, abbreviations.full AS Product, reads.checkout AS Checkout, reads.return AS Return FROM reads, abbreviations, orders, users, tags WHERE reads.orderid = orders.orderid AND orders.customerid = users.userid AND reads.epc = tags.epc AND tags.type = abbreviations.abbreviation AND reads.return = '' AND orders.customerid = ? ORDER BY abbreviations.full ASC, Return;",(session['customerid'],))
+        numcustomeritems = database.ViewQueryHelper("SELECT COUNT(reads.epc) AS Amount, abbreviations.full AS Product, reads.return AS Return FROM reads, abbreviations, orders, users, tags WHERE reads.orderid = orders.orderid AND orders.customerid = users.userid AND reads.epc = tags.epc AND tags.type = abbreviations.abbreviation AND reads.return = '' AND orders.customerid = ? GROUP BY Return, Product ORDER BY abbreviations.full ASC, Return;",(session['customerid'],))
         customerinfo = database.ViewQueryHelper("SELECT fullname, phone, email, address FROM users WHERE userid = ?",(session['customerid'],))[0]
         if len(customeritems) == 0:
             customeritems = "Customer Has No Unreturned Items"
-    return render_template("missioncontrol.html", customerdetails = customerdetails, customeritems = customeritems, numcustomeritems = numcustomeritems, allitems = allitems, customerinfo = customerinfo, session = session, countitems = countitmes)
+    return render_template("missioncontrol.html", customerdetails = customerdetails, customeritems = customeritems, numcustomeritems = numcustomeritems, allitems = allitems, customerinfo = customerinfo, session = session, countitems = countitems)
 
 #main page ^^^^^
 
@@ -389,6 +403,7 @@ def uploadtags():
     for epc in data['EPC']:
         if epc != "":
             database.ModifyQueryHelper("INSERT INTO tags (epc, purchasedate, type) VALUES (?,?,?);",(epc, datetime.now(), itemtype))
+    #file.remove(file_location) check syntax --------------
     flash(str(line_count) + " New tags uploaded to database")
     return redirect('/newtags')
     

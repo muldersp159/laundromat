@@ -25,13 +25,17 @@
         <p>The number of each type of items</p>
           <table>
             <tr>
-              <th>Number of Product</th>
               <th>Product</th>
+              <th>Total of Product</th>
+              <th>Checked Out</th>
+              <th>Checked In</th>
             </tr>
-            {% for count in countitmes %}
+            {% for count in countitems %}
               <tr>
-                <td>{{count['Amount']}}</td>
                 <td>{{count['Product']}}</td>
+                <td>{{count['Total']}}</td>
+                <td>{{count['Out']}}</td>
+                <td>{{count['In']}}</td>
               </tr>
             {% endfor %}
           </table><br><br>
@@ -41,15 +45,11 @@
             <tr>
               <th>EPC</th>
               <th>Product</th>
-              <th>Checkout</th>
-              <th>Return</th>
             </tr>
             {% for items in allitems %}
               <tr>
                 <td>{{items['EPC']}}</td>
-                <td>{{itmes['Product']}}</td>
-                <td>{{itmes['Checkout']}}</td>
-                <td>{{itmes['Return']}}</td>
+                <td>{{items['Product']}}</td>
               </tr>
             {% endfor %}
           </table>
@@ -82,7 +82,8 @@
                   <th>Phone</th>
                   <th>Select</th>
               </tr>  
-              {% for customer in customerdetails %}  
+              {% for customer in customerdetails %} 
+                <tr>
                   <form action="/dataselection" method="POST">
                       <input type="hidden" id="customerid" name="customerid" value={{customer['userid']}}>
                       <td>{{customer['fullname']}}</td> 
@@ -90,6 +91,7 @@
                       <td>{{customer['phone']}}</td>
                       <td><button type="submit" class="btn btn-default">Select</button></td>
                   </form>
+                </tr>
               {% endfor %}
             </table>
           {% else %}
